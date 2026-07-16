@@ -1,0 +1,1350 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eagle Build — Preview Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@200;400;500;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* North Star Communications brand tokens */
+    --copper:#b45309; --copper-dark:#92400e; --copper-tint:#efe6d6;
+    --charcoal:#0B0B0C; --charcoal-2:#18181b; --sidebar:#0B0B0C;
+    --ink:#0B0B0C; --ink-muted:rgba(11,11,12,.56); --bg:#F4F1EA; --bg-alt:#EBE5D8; --hairline:rgba(11,11,12,.13);
+    --li:#0a66c2; --fb:#1877f2; --ig:#c9367f;
+    --font-display:'DM Serif Display',Georgia,serif; --font-body:'DM Sans',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font-body);color:var(--ink);background:var(--bg);
+    display:grid;grid-template-columns:272px 1fr;height:100vh;overflow:hidden}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{background:var(--sidebar);color:#fff;display:flex;flex-direction:column;
+    border-right:1px solid #26262e;overflow-y:auto}
+  .hub-brand{display:flex;align-items:center;gap:.7rem;padding:1.4rem 1.25rem;border-bottom:1px solid #26262e}
+  .hub-brand img{height:34px;filter:brightness(0) invert(1);opacity:.95}
+  .hub-brand b{display:block;font-size:.95rem;line-height:1.1}
+  .hub-brand span{display:block;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--copper)}
+  .hub-nav{padding:1rem .75rem}
+  .hub-section{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#7b7b86;font-weight:700;padding:1.1rem .6rem .4rem}
+  .hub-section:first-child{padding-top:.3rem}
+  .hub-item{display:flex;align-items:center;gap:.6rem;padding:.6rem .7rem;border-radius:8px;color:#d6d6dd;
+    font-size:.9rem;font-weight:600;cursor:pointer;text-decoration:none;border-left:3px solid transparent;transition:background .15s,color .15s}
+  .hub-item:hover{background:#22222a;color:#fff}
+  .hub-item.active{background:#22222a;color:#fff;border-left-color:var(--copper)}
+  .hub-item .ic{width:16px;height:16px;flex-shrink:0;opacity:.85}
+  .hub-item.disabled{color:#5a5a64;cursor:default}
+  .hub-item.disabled:hover{background:transparent;color:#5a5a64}
+  .hub-item .badge{margin-left:auto;font-size:.62rem;letter-spacing:.03em;color:#fff;background:var(--copper-dark);padding:.1rem .42rem;border-radius:999px;font-weight:700}
+  .hub-item .soon{margin-left:auto;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#6b6b75;background:#26262e;padding:.15rem .45rem;border-radius:999px;font-weight:700}
+  .sidebar__foot{margin-top:auto;padding:1rem 1.25rem;border-top:1px solid #26262e;font-size:.7rem;color:#6b6b75;line-height:1.5}
+
+  /* ---------- Main ---------- */
+  .main{display:flex;flex-direction:column;min-width:0;height:100vh}
+  .toolbar{display:flex;align-items:center;gap:1rem;padding:.75rem 1.25rem;background:#fff;border-bottom:1px solid var(--hairline);flex-shrink:0}
+  .tb-title{font-weight:700;color:var(--charcoal);font-size:.98rem}
+  .tb-sub{color:var(--ink-muted);font-size:.82rem;margin-left:.25rem}
+  .tb-open{margin-left:auto;font-size:.82rem;font-weight:700;color:var(--copper-dark);text-decoration:none;border:1px solid var(--hairline);padding:.45rem .8rem;border-radius:7px;background:#fff}
+  .tb-open:hover{border-color:var(--copper);color:var(--charcoal)}
+  .tb-badge{font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;font-weight:800;color:#fff;background:var(--copper);padding:.2rem .5rem;border-radius:999px;margin-left:-.5rem}
+  .tb-btn{font-size:.82rem;font-weight:700;color:#fff;background:var(--charcoal);border:0;padding:.45rem .85rem;border-radius:7px;cursor:pointer;white-space:nowrap}
+  .tb-btn:hover{background:var(--copper-dark)}
+  /* site prototype side pane */
+  .sitepane-overlay{position:fixed;inset:0;background:rgba(11,11,12,.42);opacity:0;pointer-events:none;transition:opacity .25s;z-index:120}
+  .sitepane-overlay.open{opacity:1;pointer-events:auto}
+  .sitepane{position:fixed;top:0;right:0;height:100%;width:min(460px,92vw);background:var(--bg);border-left:1px solid var(--hairline);box-shadow:-30px 0 70px -30px rgba(0,0,0,.4);transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:121;display:flex;flex-direction:column}
+  .sitepane.open{transform:translateX(0)}
+  .sitepane__top{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;border-bottom:1px solid var(--hairline)}
+  .sitepane__top b{font-family:var(--font-display);font-size:1.15rem;color:var(--ink);font-weight:400}
+  .sitepane__x{background:none;border:0;font-size:1.5rem;line-height:1;color:var(--ink-muted);cursor:pointer;padding:.2rem}
+  .sitepane__x:hover{color:var(--ink)}
+  .sitepane__body{padding:1.4rem;overflow:auto}
+  .sitepane__lede{font-size:.95rem;line-height:1.55;color:var(--ink);margin-bottom:.5rem}
+  .sitepane__note{font-size:.82rem;line-height:1.5;color:var(--ink-muted);margin-bottom:1.3rem;padding-bottom:1.3rem;border-bottom:1px solid var(--hairline)}
+  .sitepane__h{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--copper);font-weight:700;margin-bottom:.9rem}
+  .sp-point{margin-bottom:1rem}
+  .sp-point b{display:block;font-size:.9rem;color:var(--ink);margin-bottom:.2rem}
+  .sp-point span{display:block;font-size:.86rem;line-height:1.55;color:var(--ink-muted)}
+  .sitepane__kicker{margin-top:.4rem;font-size:.9rem;line-height:1.55;color:var(--ink);font-weight:500;border-left:2px solid var(--copper);padding-left:.9rem}
+  .view{flex:1;min-height:0;overflow:auto}
+  .view[hidden]{display:none}
+  iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+
+  /* ---------- Cluster view ---------- */
+  .cluster{padding:2.25rem 2.5rem 3rem;max-width:1280px;margin:0 auto}
+  .cluster h1{font-family:var(--font-display);font-weight:400;text-transform:uppercase;font-size:2.4rem;line-height:1;color:var(--charcoal);letter-spacing:.01em}
+  .cluster .lede{color:var(--ink);font-size:1.05rem;max-width:74ch;margin:.6rem 0 1.75rem}
+  .diagram{background:#fff;border:1px solid var(--hairline);border-radius:16px;padding:1.5rem;box-shadow:0 24px 50px -34px rgba(19,19,23,.3)}
+  .diagram svg{width:100%;height:auto;display:block}
+  .col-label{font:700 12px var(--font-body);letter-spacing:.12em;text-transform:uppercase;fill:#8a8a94}
+  .wire{fill:none;stroke:#cfcfd6;stroke-width:2}
+  .wire--crm{stroke:var(--copper);stroke-width:2;stroke-dasharray:7 6}
+  .node{display:flex;flex-direction:column;justify-content:center;height:100%;padding:.5rem .75rem;border-radius:11px;
+    border:1px solid var(--hairline);background:#fff;overflow:hidden}
+  .node__link{text-decoration:none;display:block}
+  .node--case:hover{border-color:var(--copper);box-shadow:0 12px 26px -16px rgba(19,19,23,.4)}
+  .node__tag{font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--copper-dark);font-weight:700}
+  .node__title{font-size:.82rem;font-weight:700;color:var(--charcoal);margin-top:.1rem;line-height:1.2;display:block}
+  .node__social{margin-top:.4rem;display:inline-flex;align-items:center;gap:.35rem;border:0;background:transparent;
+    cursor:pointer;font:600 .66rem var(--font-body);color:var(--ink-muted);padding:0}
+  .node__social:hover{color:var(--copper-dark)}
+  .pf{width:15px;height:15px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:.56rem;font-weight:800;color:#fff}
+  .pf--li{background:var(--li)} .pf--fb{background:var(--fb)} .pf--ig{background:var(--ig)}
+  .node--lp{background:var(--charcoal);border-color:var(--charcoal)}
+  .node--lp .node__tag{color:var(--copper)} .node--lp .node__title{color:#fff;font-size:1.05rem}
+  .node--lp .node__meta{color:#b6b6c0;font-size:.7rem;margin-top:.2rem}
+  .node--crm{background:var(--copper-tint);border:2px dashed var(--copper)}
+  .node--crm .node__tag{color:var(--copper-dark)} .node--crm .node__title{color:var(--copper-dark);font-size:1rem}
+  .node--crm .node__meta{color:#a9793f;font-size:.7rem;margin-top:.2rem}
+  .legend{display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:1.25rem;font-size:.82rem;color:var(--ink-muted)}
+  .legend span{display:inline-flex;align-items:center;gap:.5rem}
+  .swatch{width:22px;height:12px;border-radius:3px;display:inline-block}
+  .cluster-note{margin-top:1.5rem;background:#fff;border:1px solid var(--hairline);border-left:3px solid var(--copper);border-radius:10px;padding:1rem 1.25rem;font-size:.9rem;color:var(--ink)}
+
+  /* ---------- Social view ---------- */
+  .social{padding:2rem 2.5rem 3rem;max-width:1320px;margin:0 auto}
+  .social h1{font-family:var(--font-display);font-weight:400;text-transform:uppercase;font-size:2.3rem;line-height:1;color:var(--charcoal)}
+  .social .lede{color:var(--ink-muted);font-size:.95rem;margin:.4rem 0 1.25rem}
+  .filters{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:1.5rem;position:sticky;top:0;background:var(--bg);padding:.5rem 0;z-index:2}
+  .chip{border:1px solid var(--hairline);background:#fff;border-radius:999px;padding:.4rem .9rem;font-size:.82rem;font-weight:700;color:var(--charcoal);cursor:pointer}
+  .chip:hover{border-color:var(--copper)}
+  .chip.active{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+  .chip .dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:.4rem;vertical-align:middle}
+  .article-filter{margin-left:auto;font-size:.82rem;color:var(--ink-muted)}
+  .article-filter b{color:var(--charcoal)}
+  .article-filter a{color:var(--copper-dark);font-weight:700;cursor:pointer;margin-left:.5rem}
+
+  .art-group{margin-bottom:2rem;border-top:1px solid var(--hairline);padding-top:1.5rem}
+  .art-head{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}
+  .art-head img{width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0}
+  .art-head .meta h3{font-size:1.05rem;color:var(--charcoal);line-height:1.2}
+  .art-head .meta span{font-size:.78rem;color:var(--ink-muted)}
+  .art-head .links{margin-left:auto;display:flex;gap:.5rem}
+  .art-head .links a{font-size:.78rem;font-weight:700;color:var(--copper-dark);text-decoration:none;border:1px solid var(--hairline);padding:.35rem .7rem;border-radius:7px;cursor:pointer}
+  .art-head .links a:hover{border-color:var(--copper)}
+
+  .posts{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+  @media(max-width:1050px){.posts{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:720px){.posts{grid-template-columns:1fr}}
+  .post{background:#fff;border:1px solid var(--hairline);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .post__bar{display:flex;align-items:center;gap:.55rem;padding:.7rem .9rem;border-bottom:1px solid var(--hairline)}
+  .post__pf{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.8rem;flex-shrink:0}
+  .post__bar b{font-size:.85rem;color:var(--charcoal)}
+  .post__bar small{font-size:.7rem;color:var(--ink-muted);margin-left:auto}
+  .post__img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#eee}
+  .post.ig .post__img{aspect-ratio:1/1}
+  .post__body{padding:.9rem 1rem 1.1rem;display:flex;flex-direction:column;flex:1}
+  .post__cap{font-size:.86rem;line-height:1.5;color:var(--ink);white-space:pre-wrap;margin-bottom:.7rem}
+  .post__tags{font-size:.78rem;color:var(--copper-dark);font-weight:600;line-height:1.6;word-break:break-word}
+  .post__foot{margin-top:auto;padding-top:.7rem;font-size:.72rem;color:var(--ink-muted);border-top:1px dashed var(--hairline)}
+  .post__foot b{color:var(--charcoal)}
+
+  /* ---------- Meta Ads view ---------- */
+  .ads{padding:2rem 2.5rem 3rem;max-width:1180px;margin:0 auto}
+  .ads h1{font-family:var(--font-display);font-weight:400;text-transform:uppercase;font-size:2.3rem;line-height:1;color:var(--charcoal)}
+  .ads .lede{color:var(--ink-muted);font-size:.95rem;margin:.4rem 0 1.5rem;max-width:80ch}
+  .ad-grid{display:grid;grid-template-columns:1fr 1fr;gap:2.25rem;align-items:start}
+  @media(max-width:1000px){.ad-grid{grid-template-columns:1fr}}
+  .ad-label{font-size:.75rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--copper-dark);margin-bottom:.7rem}
+  .ad-label.blue{color:var(--fb)}
+  .fb{background:#fff;border:1px solid var(--hairline);border-radius:12px;overflow:hidden;max-width:500px;box-shadow:0 18px 40px -28px rgba(19,19,23,.35)}
+  .fb__head{display:flex;align-items:center;gap:.6rem;padding:.8rem .9rem .5rem}
+  .fb__avatar{width:40px;height:40px;border-radius:50%;background:var(--charcoal);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .fb__avatar img{width:26px;height:26px;filter:brightness(0) invert(1)}
+  .fb__who b{font-size:.9rem;color:#050505}
+  .fb__who span{font-size:.72rem;color:#65676b}
+  .fb__text{padding:0 .9rem .7rem;font-size:.88rem;line-height:1.45;color:#050505;white-space:pre-wrap}
+  .fb__media img{width:100%;display:block;aspect-ratio:1/1;object-fit:cover;background:#eee}
+  .fb__link{display:flex;align-items:center;gap:.9rem;background:#f0f2f5;padding:.7rem .9rem}
+  .fb__link .lk{flex:1;min-width:0}
+  .fb__link .lk small{font-size:.66rem;text-transform:uppercase;color:#65676b;letter-spacing:.02em}
+  .fb__link .lk b{display:block;font-size:.9rem;color:#050505;line-height:1.2;margin:.1rem 0}
+  .fb__link .lk span{font-size:.76rem;color:#65676b}
+  .fb__cta{background:#e4e6eb;border:0;color:#050505;font-weight:700;font-size:.8rem;padding:.55rem .9rem;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;text-decoration:none;display:inline-block}
+  .fb__cta:hover{background:#d8dade}
+  .fb__cta.primary{background:var(--fb);color:#fff}
+  .fb__cta.primary:hover{background:#1467d0}
+  .fb__react{display:flex;justify-content:space-around;border-top:1px solid var(--hairline);padding:.35rem;color:#65676b;font-size:.8rem;font-weight:600}
+  .fb__react span{padding:.3rem .6rem}
+  .carousel-hint{font-size:.72rem;color:#65676b;padding:0 .9rem .35rem}
+  .carousel{display:flex;gap:.5rem;overflow-x:auto;padding:0 .9rem .8rem;scroll-snap-type:x mandatory}
+  .carousel::-webkit-scrollbar{height:6px}
+  .carousel::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
+  .cc{flex:0 0 76%;scroll-snap-align:start;border:1px solid var(--hairline);border-radius:10px;overflow:hidden;background:#fff}
+  .cc img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#eee}
+  .cc__b{padding:.55rem .7rem .75rem}
+  .cc__b .step{font-size:.64rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--copper-dark)}
+  .cc__b b{display:block;font-size:.86rem;color:#050505;margin:.15rem 0 .2rem;line-height:1.2}
+  .cc__b p{font-size:.76rem;color:#65676b;line-height:1.35}
+  .cc{cursor:pointer}
+  .carousel-wrap{position:relative}
+  .car-arrow{position:absolute;top:38%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;
+    background:rgba(255,255,255,.96);border:1px solid rgba(0,0,0,.08);box-shadow:0 2px 10px rgba(0,0,0,.28);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:3;color:#050505;font-size:1.2rem;
+    font-weight:700;line-height:0;padding-bottom:3px;transition:opacity .15s,background .15s}
+  .car-arrow:hover{background:#fff}
+  .car-arrow.prev{left:1.35rem}
+  .car-arrow.next{right:1.35rem}
+  .car-arrow[disabled]{opacity:0;pointer-events:none}
+
+  /* ---------- CRM view ---------- */
+  .crm{padding:2rem 2.5rem 3rem;max-width:1200px;margin:0 auto}
+  .crm h1{font-family:var(--font-display);font-weight:400;text-transform:uppercase;font-size:2.3rem;line-height:1;color:var(--charcoal)}
+  .crm .lede{color:var(--ink-muted);font-size:.95rem;margin:.4rem 0 1.1rem;max-width:82ch}
+  .stage-filter{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1.25rem}
+  .sfil{border:1px solid var(--hairline);background:#fff;border-radius:999px;padding:.35rem .8rem;font-size:.8rem;font-weight:700;cursor:pointer;color:var(--charcoal);display:inline-flex;align-items:center;gap:.45rem}
+  .sfil:hover{border-color:var(--copper)}
+  .sfil .n{background:var(--bg-alt);border-radius:999px;padding:.02rem .42rem;font-size:.72rem;color:var(--ink-muted)}
+  .sfil.active{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+  .sfil.active .n{background:rgba(255,255,255,.2);color:#fff}
+  .lead-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--hairline);border-radius:12px;overflow:hidden}
+  .lead-table th{text-align:left;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);padding:.7rem 1rem;border-bottom:1px solid var(--hairline);background:var(--bg-alt)}
+  .lead-table td{padding:.75rem 1rem;border-bottom:1px solid var(--hairline);font-size:.88rem;color:var(--ink);vertical-align:middle}
+  .lead-table tbody tr{cursor:pointer}
+  .lead-table tbody tr:hover{background:var(--bg-alt)}
+  .lead-table tbody tr:last-child td{border-bottom:0}
+  .lead-table .nm{font-weight:700;color:var(--charcoal)}
+  .lead-table .sub{color:var(--ink-muted);font-size:.78rem}
+  .badge-stage{display:inline-block;padding:.22rem .62rem;border-radius:999px;font-size:.72rem;font-weight:800;white-space:nowrap}
+  .st-new{background:#e3edfb;color:#1a5fb4}.st-contacted{background:#f6ece0;color:#c07d38}
+  .st-visit{background:#efe6fb;color:#7a4bc9}.st-quoted{background:#dff3f0;color:#12897a}
+  .st-won{background:#e2f6e9;color:#1a9d54}.st-lost{background:#ececed;color:#6d6d77}
+  .src-pill{display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;background:var(--bg-alt);color:var(--charcoal)}
+  .src-pill.paid{background:#e7f0fd;color:var(--fb)}.src-pill.social{background:#fbe9f2;color:var(--ig)}.src-pill.organic{background:#e9f2ea;color:#1a8f54}.src-pill.direct{background:#eef0f2;color:#555}
+  /* drawer */
+  .drawer-ov{position:fixed;inset:0;background:rgba(19,19,23,.4);display:none;z-index:100}
+  .drawer-ov.open{display:block}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:452px;max-width:94vw;background:#fff;box-shadow:-24px 0 70px -24px rgba(0,0,0,.45);transform:translateX(100%);transition:transform .25s var(--ease);overflow:auto;z-index:101}
+  .drawer.open{transform:translateX(0)}
+  .drawer__top{background:var(--charcoal);color:#fff;padding:1.3rem 1.4rem;position:relative}
+  .drawer__x{position:absolute;top:.85rem;right:1.1rem;background:transparent;border:0;color:#fff;font-size:1.2rem;cursor:pointer;line-height:1}
+  .drawer__top h2{font-size:1.35rem}
+  .drawer__top .who{color:#c7c7cf;font-size:.82rem;margin-top:.25rem}
+  .drawer__stage{margin-top:1rem;display:flex;align-items:center;gap:.55rem}
+  .drawer__stage label{font-size:.72rem;color:#9a9aa2;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+  .drawer__stage select{background:#22222a;color:#fff;border:1px solid #34343d;border-radius:7px;padding:.42rem .6rem;font:inherit;font-size:.84rem;font-weight:700;cursor:pointer}
+  .drawer__body{padding:.4rem 1.4rem 2rem}
+  .dsec{border-top:1px solid var(--hairline);padding:1.05rem 0}
+  .dsec h4{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--copper-dark);margin-bottom:.65rem}
+  .drow{display:flex;justify-content:space-between;gap:1rem;padding:.26rem 0;font-size:.87rem}
+  .drow .k{color:var(--ink-muted);flex-shrink:0}
+  .drow .v{color:var(--charcoal);font-weight:600;text-align:right;word-break:break-word}
+  .drow .v a{color:var(--copper-dark)}
+  .drow .v.mono{font-family:var(--font-mono,ui-monospace,monospace);font-weight:500;font-size:.8rem}
+  .dmsg{background:var(--bg-alt);border-radius:8px;padding:.7rem .8rem;font-size:.86rem;color:var(--ink);line-height:1.5}
+  .dnotes{width:100%;min-height:96px;border:1px solid var(--hairline);border-radius:8px;padding:.6rem .7rem;font:inherit;font-size:.86rem;line-height:1.5;resize:vertical;color:var(--ink)}
+  .dnote-save{margin-top:.5rem;font-size:.75rem;color:var(--ink-muted)}
+
+  /* ---------- North Star Communications brand overrides ---------- */
+  body{-webkit-font-smoothing:antialiased}
+  .cluster h1,.social h1,.ads h1,.crm h1{text-transform:none;letter-spacing:-.015em;font-weight:400;line-height:1.03}
+  .hub-brand{gap:.65rem}
+  .hub-brand .nsc-star{width:27px;height:27px;flex-shrink:0}
+  .hub-brand b{font-family:var(--font-body);font-weight:500;font-size:.9rem;letter-spacing:.16em;text-transform:uppercase;line-height:1;color:#fff}
+  .hub-brand span{font-family:var(--font-body);font-weight:400;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(244,241,234,.5)}
+  .hub-proposal{padding:.75rem 1.25rem .1rem;font-size:.74rem;color:rgba(244,241,234,.5);letter-spacing:.01em}
+  .hub-proposal b{color:#fff;font-weight:600}
+
+  /* ---------- Google Business Profile view ---------- */
+  .gbp{padding:2rem 2.5rem 3rem;max-width:1120px;margin:0 auto}
+  .gbp h1{font-family:var(--font-display);font-weight:400;letter-spacing:-.015em;font-size:2.3rem;color:var(--ink)}
+  .gbp .lede{color:var(--ink-muted);font-size:.95rem;margin:.4rem 0 1.4rem;max-width:84ch}
+  .gbp-audit{background:var(--charcoal);color:#fff;border-radius:14px;padding:1.6rem 1.8rem;margin-bottom:1.6rem}
+  .gbp-audit .eyebrow{color:var(--copper);font-weight:700;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase}
+  .gbp-audit h2{font-family:var(--font-display);font-weight:400;font-size:1.7rem;color:#fff;margin:.4rem 0 .6rem;letter-spacing:-.01em}
+  .gbp-audit p{color:#c9c7c0;font-size:.92rem;line-height:1.6;max-width:78ch}
+  .audit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:1.2rem}
+  @media(max-width:820px){.audit-grid{grid-template-columns:1fr 1fr}}
+  .audit-cell{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:.75rem .9rem}
+  .audit-cell .lab{font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:700}
+  .audit-cell .val{display:flex;align-items:center;gap:.5rem;margin-top:.3rem;font-weight:700;font-size:.98rem}
+  .audit-cell .now{color:#e3736b}.audit-cell .arrow{color:rgba(255,255,255,.4)}.audit-cell .tgt{color:#7bd88f}
+  .gbp-sub{font-family:var(--font-display);font-size:1.2rem;color:var(--ink);margin:1.6rem 0 .25rem}
+  .gbp-note{font-size:.82rem;color:var(--ink-muted);margin-bottom:.9rem;max-width:80ch}
+  /* Google-styled mockup */
+  .g{font-family:arial,'Helvetica Neue',sans-serif}
+  .gcard{background:#fff;border:1px solid #dadce0;border-radius:12px;overflow:hidden}
+  .gbp-head{display:grid;grid-template-columns:1fr 300px}
+  @media(max-width:820px){.gbp-head{grid-template-columns:1fr}}
+  .gbp-head__main{padding:1.3rem 1.5rem}
+  .gbp-head__main h3{font-size:1.7rem;font-weight:400;color:#202124;line-height:1.1}
+  .g-rating{display:flex;align-items:center;gap:.35rem;margin:.4rem 0}
+  .g-rating b{color:#202124;font-size:.95rem}.g-stars{color:#fbbc04;letter-spacing:1px;font-size:.95rem}
+  .g-rating a{color:#1a73e8;font-size:.9rem;text-decoration:none}
+  .g-cat{color:#5f6368;font-size:.92rem}
+  .g-actions{display:flex;gap:1.5rem;margin:1.1rem 0 .4rem}
+  .g-act{display:flex;flex-direction:column;align-items:center;gap:.3rem;color:#1a73e8;font-size:.72rem}
+  .g-act .ic2{width:38px;height:38px;border-radius:50%;border:1px solid #dadce0;display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .g-info{margin-top:.8rem;border-top:1px solid #e8eaed;padding-top:.5rem}
+  .g-info .row{display:flex;gap:.7rem;padding:.42rem 0;font-size:.86rem;color:#3c4043;align-items:flex-start}
+  .g-info .row .gi{color:#5f6368;flex-shrink:0;width:18px;text-align:center}
+  .g-info .row .open{color:#188038;font-weight:500}
+  .g-info .row a{color:#1a73e8;text-decoration:none}
+  .gbp-head__photos{display:grid;grid-template-columns:1fr 1fr;gap:2px;min-height:220px}
+  .gbp-head__photos img{width:100%;height:100%;object-fit:cover;display:block}
+  .gbp-head__photos img:first-child{grid-column:1/-1;height:150px}
+  .g-sec{background:#fff;border:1px solid #dadce0;border-radius:12px;padding:1.2rem 1.4rem;margin-top:1rem}
+  .g-sec__h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.9rem}
+  .g-sec__h h4{font-size:1.15rem;font-weight:500;color:#202124}
+  .g-sec__h .more{color:#1a73e8;font-size:.85rem}
+  .g-revsum{display:flex;align-items:center;gap:1.6rem;padding-bottom:1rem;border-bottom:1px solid #e8eaed;margin-bottom:.6rem}
+  .g-revsum .big{font-size:2.8rem;font-weight:400;color:#202124;line-height:1}
+  .g-revsum .big .s{color:#fbbc04;font-size:.9rem;display:block;letter-spacing:1px}
+  .g-revsum .big .c{font-size:.72rem;color:#5f6368;display:block;margin-top:.2rem}
+  .g-revsum .bars{flex:1}
+  .g-bar{display:flex;align-items:center;gap:.5rem;font-size:.72rem;color:#5f6368;margin:.15rem 0}
+  .g-bar .track{flex:1;height:9px;background:#e8eaed;border-radius:5px;overflow:hidden}
+  .g-bar .fill{height:100%;background:#fbbc04}
+  .g-rev{padding:.9rem 0;border-bottom:1px solid #f1f3f4}.g-rev:last-child{border-bottom:0}
+  .g-rev__top{display:flex;align-items:center;gap:.6rem}
+  .g-av{width:32px;height:32px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:500;flex-shrink:0;font-size:.85rem}
+  .g-rev__who b{font-size:.9rem;color:#202124;font-weight:500;display:block}
+  .g-rev__who span{font-size:.75rem;color:#5f6368}
+  .g-rev__stars{color:#fbbc04;font-size:.8rem;margin:.45rem 0 .3rem;letter-spacing:1px}
+  .g-rev__text{font-size:.88rem;color:#3c4043;line-height:1.55}
+  .g-reply{background:#f8f9fa;border-radius:8px;padding:.7rem .85rem;margin-top:.6rem}
+  .g-reply b{font-size:.78rem;color:#202124}.g-reply span{font-size:.7rem;color:#5f6368;margin-left:.3rem}
+  .g-reply p{font-size:.82rem;color:#3c4043;line-height:1.5;margin-top:.25rem}
+  .g-posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}
+  .g-post{border:1px solid #dadce0;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+  .g-post img{width:100%;height:130px;object-fit:cover;display:block}
+  .g-post__b{padding:.7rem .8rem .9rem;display:flex;flex-direction:column;flex:1}
+  .g-post__type{font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#1a73e8}
+  .g-post__b b{display:block;font-size:.9rem;color:#202124;margin:.2rem 0 .25rem;line-height:1.25}
+  .g-post__b p{font-size:.78rem;color:#5f6368;line-height:1.4;flex:1}
+  .g-post__cta{color:#1a73e8;font-size:.82rem;font-weight:500;margin-top:.6rem}
+  .g-prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:1rem}
+  .g-prod{border:1px solid #dadce0;border-radius:10px;overflow:hidden}
+  .g-prod img{width:100%;height:120px;object-fit:cover;display:block}
+  .g-prod__b{padding:.65rem .8rem .8rem}
+  .g-prod__b b{font-size:.9rem;color:#202124;display:block}
+  .g-prod__b .price{color:#188038;font-size:.82rem;font-weight:500;margin:.15rem 0}
+  .g-prod__b p{font-size:.76rem;color:#5f6368;line-height:1.4}
+  .g-qa{padding:.85rem 0;border-bottom:1px solid #f1f3f4}.g-qa:last-child{border-bottom:0}
+  .g-qa__q{display:flex;gap:.6rem;font-size:.9rem;color:#202124;font-weight:500}.g-qa__q .qm{color:#5f6368}
+  .g-qa__a{display:flex;gap:.6rem;margin-top:.5rem;font-size:.85rem;color:#3c4043;line-height:1.5}
+  .g-qa__a .badge-o{font-size:.64rem;background:#e8f0fe;color:#1a73e8;padding:.1rem .4rem;border-radius:4px;font-weight:700;flex-shrink:0;height:fit-content;margin-top:.1rem}
+
+  /* ---------- Trustpilot view ---------- */
+  .tp{font-family:'Helvetica Neue',Arial,sans-serif}
+  .tp-head{background:#fff;border:1px solid #e6e6ea;border-radius:12px;padding:1.5rem 1.6rem}
+  .tp-head h3{font-size:1.7rem;font-weight:700;color:#191919;line-height:1.1}
+  .tp-domain{color:#00857a;font-size:.9rem;text-decoration:none;display:inline-block;margin:.2rem 0 .95rem}
+  .tp-score{display:flex;align-items:center;gap:.9rem;flex-wrap:wrap}
+  .tp-stars{display:inline-flex;gap:3px}
+  .tpsq{width:28px;height:28px;background:#00b67a;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff;font-size:16px;line-height:1;flex:0 0 auto}
+  .tpsq.sm{width:20px;height:20px;font-size:12px;border-radius:2px}
+  .tpsq.off{background:#dcdce3}
+  .tp-trustscore{font-size:1rem;color:#191919}.tp-trustscore b{font-weight:700}
+  .tp-meta{margin-top:.75rem;color:#6b6b6b;font-size:.9rem}.tp-meta b{color:#191919;font-weight:700}
+  .tp-verified{margin-top:.55rem;color:#00857a;font-weight:600;font-size:.82rem;display:inline-flex;align-items:center;gap:.35rem}
+  .tp-sec{background:#fff;border:1px solid #e6e6ea;border-radius:12px;padding:1.3rem 1.5rem;margin-top:1rem}
+  .tp-sec__h{font-size:1.15rem;font-weight:700;color:#191919;margin-bottom:1rem}
+  .tp-dist{display:flex;flex-direction:column;gap:.45rem;max-width:520px}
+  .tp-drow{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:#6b6b6b}
+  .tp-drow .lab{width:58px;color:#191919;font-weight:600}
+  .tp-drow .track{flex:1;height:10px;background:#eeeef2;border-radius:2px;overflow:hidden}
+  .tp-drow .fill{height:100%;background:#00b67a}
+  .tp-drow .pct{width:36px;text-align:right}
+  .tp-rev{padding:1.1rem 0;border-bottom:1px solid #eeeef2}.tp-rev:last-child{border-bottom:0}
+  .tp-rev__top{display:flex;align-items:center;gap:.6rem;margin-bottom:.55rem}
+  .tp-av{width:34px;height:34px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:.9rem}
+  .tp-rev__who b{display:block;font-size:.9rem;color:#191919}
+  .tp-rev__who span{font-size:.76rem;color:#6b6b6b}
+  .tp-rev__meta{margin-left:auto;font-size:.75rem;color:#6b6b6b}
+  .tp-rev__title{display:block;font-size:.95rem;font-weight:700;color:#191919;margin:.5rem 0 .3rem}
+  .tp-rev__body{font-size:.88rem;color:#33333a;line-height:1.55}
+  .tp-doe{display:block;font-size:.76rem;color:#6b6b6b;margin-top:.6rem}
+  .tp-reply{background:#f7f7fa;border-radius:8px;padding:.75rem .9rem;margin-top:.7rem}
+  .tp-reply b{font-size:.8rem;color:#191919}.tp-reply span{font-size:.72rem;color:#6b6b6b;margin-left:.3rem}
+  .tp-reply p{font-size:.82rem;color:#33333a;line-height:1.5;margin-top:.25rem}
+
+  /* ---------- Recommendations brief ---------- */
+  .brief{max-width:940px;margin:0 auto}
+  .brief__eyebrow{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--copper);font-weight:600;margin-bottom:1rem}
+  .brief h1{font-family:var(--font-display);font-size:2.9rem;line-height:1.02;letter-spacing:-.01em;color:var(--ink);margin-bottom:1rem;font-weight:400}
+  .brief__lede{font-size:1.18rem;line-height:1.5;color:var(--ink);max-width:770px;margin-bottom:2.4rem}
+  .brief__sec{display:grid;grid-template-columns:60px 1fr;gap:1.4rem;padding:2rem 0;border-top:1px solid var(--hairline)}
+  .brief__num{font-family:var(--font-display);font-size:1.35rem;color:var(--copper);line-height:1}
+  .brief__body h2{font-family:var(--font-display);font-size:1.65rem;line-height:1.1;color:var(--ink);margin-bottom:.9rem;font-weight:400;letter-spacing:-.01em}
+  .brief__body p{font-size:.98rem;line-height:1.65;color:var(--ink-muted);margin-bottom:.85rem;max-width:730px}
+  .brief__body p b{color:var(--ink);font-weight:700}
+  .brief__aside{border-left:2px solid var(--copper);padding-left:1rem;color:var(--ink)!important;font-weight:500}
+  .state{margin-top:1.3rem;border-top:1px solid var(--hairline)}
+  .state__row{display:grid;grid-template-columns:210px 1fr;gap:1.3rem;padding:.85rem 0;border-bottom:1px solid var(--hairline)}
+  .state__k{font-weight:700;color:var(--ink);font-size:.9rem}
+  .state__v{font-size:.9rem;line-height:1.55;color:var(--ink-muted);max-width:640px}
+  @media(max-width:760px){.state__row{grid-template-columns:1fr;gap:.25rem}}
+  .ledger{margin-top:1.3rem;border:1px solid var(--hairline);border-radius:12px;overflow:hidden;background:#fff;max-width:none}
+  .ledger__head,.ledger__row{display:grid;grid-template-columns:1.05fr 1.35fr 1.95fr 1.5fr;gap:1rem;padding:.9rem 1.1rem}
+  .ledger__head{background:var(--charcoal);color:#F4F1EA;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;font-weight:600}
+  .ledger__row{border-top:1px solid var(--hairline);font-size:.85rem;line-height:1.45}
+  .ledger__row .lg-seg{font-weight:700;color:var(--ink)}
+  .ledger__row .lg-now{color:#a24a38}
+  .ledger__row .lg-build{color:var(--ink-muted)}
+  .ledger__row .lg-why{color:var(--copper-dark);font-weight:500}
+  .brief__foot{display:flex;align-items:center;gap:.8rem;margin-top:2.2rem;padding-top:1.5rem;border-top:1px solid var(--hairline)}
+  .brief__foot p{font-size:.8rem;color:var(--ink-muted)}
+  .brief__star{width:16px;height:16px;flex:0 0 auto;background:var(--copper);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%)}
+  @media (max-width:760px){.brief__sec{grid-template-columns:1fr;gap:.5rem}.brief h1{font-size:2.2rem}.ledger__head{display:none}.ledger__row{grid-template-columns:1fr;gap:.25rem;padding:1rem 1.1rem}.ledger__row .lg-seg{font-size:.95rem}}
+  /* who we are: values, services, client wall */
+  .vals{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem 1.6rem;margin-top:1.2rem}
+  .val b{display:block;font-size:.95rem;color:var(--ink);margin-bottom:.25rem}
+  .val span{font-size:.86rem;line-height:1.5;color:var(--ink-muted)}
+  .svc{margin-top:1.2rem;border-top:1px solid var(--hairline)}
+  .svc__row{display:grid;grid-template-columns:180px 1fr;gap:1.4rem;padding:1rem 0;border-bottom:1px solid var(--hairline)}
+  .svc__name{font-family:var(--font-display);font-size:1.15rem;color:var(--ink)}
+  .svc__desc{font-size:.95rem;line-height:1.5;color:var(--ink)}
+  .svc__tags{display:block;margin-top:.35rem;font-size:.78rem;color:var(--copper-dark);letter-spacing:.01em}
+  .people{margin-top:1.5rem;display:grid;gap:1.5rem}
+  .person{display:grid;grid-template-columns:96px 1fr;gap:1.5rem;align-items:start;padding-bottom:1.5rem;border-bottom:1px solid var(--hairline)}
+  .person:last-child{border-bottom:0;padding-bottom:0}
+  .person__av{width:96px;height:96px;border-radius:50%;background:var(--charcoal);color:#F4F1EA;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:2.3rem;overflow:hidden;flex:0 0 auto}
+  .person__av img{width:100%;height:100%;object-fit:cover;display:block}
+  .person__body h3{font-family:var(--font-display);font-size:1.5rem;color:var(--ink);font-weight:400;line-height:1.1}
+  .person__role{font-size:.8rem;letter-spacing:.02em;color:var(--copper);font-weight:600;margin:.3rem 0 .8rem}
+  .person__bio{font-size:.95rem;line-height:1.6;color:var(--ink-muted);max-width:660px}
+  @media(max-width:760px){.person{grid-template-columns:1fr;gap:.9rem}.person__av{width:72px;height:72px;font-size:1.8rem}}
+  .cwall{margin-top:1.3rem;display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem}
+  .ctile{background:#fff;border:1px solid var(--hairline);border-radius:12px;padding:1rem 1.1rem;display:flex;flex-direction:column;min-height:96px}
+  .ctile__logo{font-weight:800;font-size:1rem;letter-spacing:.02em;color:var(--ink);text-transform:uppercase}
+  .ctile__mark{min-height:36px;display:flex;align-items:center}
+  .ctile__img{height:30px;width:auto;max-width:100%;display:block}
+  .ctile__did{margin-top:.5rem;font-size:.8rem;line-height:1.45;color:var(--ink-muted)}
+  .ctile__did.pending{color:var(--copper);opacity:.7;font-style:italic}
+  .ctile__desc{margin-top:.6rem;font-size:.82rem;line-height:1.45;color:var(--ink);font-weight:500}
+  .ctile__scope{margin-top:.6rem;font-size:.8rem;line-height:1.45;color:var(--ink-muted)}
+  .ctile__lbl{display:block;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--copper);font-weight:700;margin-bottom:.2rem}
+  @media (max-width:760px){.vals{grid-template-columns:1fr}.svc__row{grid-template-columns:1fr;gap:.3rem}.cwall{grid-template-columns:1fr 1fr}}
+  /* lead form modal */
+  .lead-overlay{position:fixed;inset:0;background:rgba(19,19,23,.6);display:none;align-items:center;justify-content:center;z-index:100;padding:1.5rem}
+  .lead-overlay.open{display:flex}
+  .lead{background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 40px 90px -30px rgba(0,0,0,.7)}
+  .lead__top{background:var(--charcoal);color:#fff;padding:1.25rem 1.35rem;position:relative}
+  .lead__top img{height:26px;filter:brightness(0) invert(1);margin-bottom:.6rem}
+  .lead__top h3{font-size:1.1rem;line-height:1.2}
+  .lead__top p{font-size:.8rem;color:#c7c7cf;margin-top:.3rem}
+  .lead__x{position:absolute;top:.7rem;right:1rem;background:transparent;border:0;color:#fff;font-size:1.15rem;cursor:pointer;line-height:1}
+  .lead__body{padding:1.15rem 1.35rem 1.5rem}
+  .lead label{display:block;font-size:.76rem;font-weight:700;color:var(--charcoal);margin:.65rem 0 .3rem}
+  .lead input,.lead select{width:100%;padding:.58rem .7rem;border:1px solid var(--hairline);border-radius:8px;font:inherit;font-size:.9rem;background:#fff}
+  .lead .priv{font-size:.7rem;color:var(--ink-muted);margin-top:.85rem;line-height:1.4}
+  .lead .submit{width:100%;margin-top:1rem;background:var(--copper);color:var(--charcoal);border:0;border-radius:8px;padding:.72rem;font-weight:800;cursor:pointer;font-size:.95rem}
+  .lead .submit:hover{background:var(--copper-dark);color:#fff}
+  .lead .instant{font-size:.68rem;color:var(--ink-muted);text-align:center;margin-top:.7rem}
+  .lead .done{text-align:center;padding:.5rem 0 .5rem}
+  .lead .done .tick{width:48px;height:48px;border-radius:50%;background:#e7f6ec;color:#1a9d54;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto .8rem}
+  .lead .crm-flag{background:var(--copper-tint);border:1px solid #ecd9c2;border-radius:8px;padding:.75rem .85rem;font-size:.8rem;color:var(--copper-dark);margin-top:.9rem;line-height:1.45}
+  .node--ad{background:#fff;border:1px solid var(--fb);cursor:pointer}
+  .node--ad:hover{box-shadow:0 12px 26px -16px rgba(24,119,242,.5)}
+  .node--ad .node__tag{color:var(--fb)}
+  .wire--ad{fill:none;stroke:var(--fb);stroke-width:2;stroke-dasharray:2 5;stroke-linecap:round}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="hub-brand"><svg class="nsc-star" viewBox="0 0 41 41" xmlns="http://www.w3.org/2000/svg" aria-label="North Star Communications"><path d="M20.4927 41L17.9311 33.3152C17.1376 30.9282 15.7982 28.7591 14.0195 26.9804C12.2408 25.2017 10.0718 23.8624 7.68476 23.0689L0 20.4927L7.68476 17.9311C10.0718 17.1376 12.2408 15.7982 14.0195 14.0195C15.7982 12.2408 17.1376 10.0718 17.9311 7.68475L20.4927 0L23.0543 7.6994C23.8585 10.0723 25.2025 12.2262 26.9805 13.9915C28.7585 15.7568 30.922 17.0854 33.3006 17.8725L41 20.4341L33.3006 23.0103C30.9136 23.8039 28.7445 25.1432 26.9658 26.9219C25.1871 28.7006 23.8478 30.8697 23.0543 33.2567L20.4927 41ZM9.28026 20.5073C11.8426 21.4693 14.1692 22.9691 16.1032 24.9057C18.0373 26.8423 19.5341 29.1707 20.4927 31.7344C21.4521 29.1688 22.9508 26.839 24.8876 24.9022C26.8244 22.9654 29.1542 21.4667 31.7197 20.5073C29.1561 19.5487 26.8277 18.0519 24.891 16.1179C22.9544 14.1838 21.4547 11.8573 20.4927 9.2949C19.5452 11.8682 18.0527 14.2064 16.1174 16.1492C14.1822 18.0921 11.8499 19.5937 9.28026 20.5512V20.5073Z" fill="#F4F1EA"/></svg><div><b>North Star</b><span>Communications</span></div></div>
+  <div class="hub-proposal">Proposal for <b>Eagle Build</b></div>
+  <nav class="hub-nav">
+    <p class="hub-section">Project</p>
+    <a class="hub-item" data-view="recs">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h5M10 17h5"/></svg>
+      Recommendations</a>
+    <a class="hub-item" data-view="who">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+      Who We Are</a>
+    <a class="hub-item" data-view="people">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.6"/><path d="M3.5 20v-1a5 5 0 0 1 5-5h1a5 5 0 0 1 5 5v1"/><path d="M16 14.2a4 4 0 0 1 4.5 4.3V20"/></svg>
+      Key People</a>
+
+    <p class="hub-section">Website Hub</p>
+    <a class="hub-item active" data-view="website">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+      Website</a>
+    <a class="hub-item" data-view="cluster">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 6h5a2 2 0 0 1 2 2v2M7 18h5a2 2 0 0 0 2-2v-2"/></svg>
+      Content Cluster example</a>
+
+    <p class="hub-section">Social Hub</p>
+    <a class="hub-item" data-view="social">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v12H7l-3 3z"/></svg>
+      Organic Posts <span class="badge">15</span></a>
+    <a class="hub-item" data-view="ads">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-7-7 18-2-7-9-4z"/></svg>
+      Meta Ads <span class="badge">2</span></a>
+    <a class="hub-item" data-view="gbp">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      Google Business</a>
+    <a class="hub-item" data-view="tp">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.9 5.9 6.6 1-4.7 4.6 1.1 6.5L12 17.9 6.1 21l1.1-6.5L2.5 9.9l6.6-1z"/></svg>
+      Trustpilot</a>
+
+    <p class="hub-section">CRM</p>
+    <a class="hub-item" data-view="crm">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+      Leads &amp; pipeline <span class="badge">7</span></a>
+  </nav>
+  <div class="sidebar__foot">North Star Communications.<br>A proposal for Eagle Build. Surfaces are review candidates, not the live site.</div>
+</aside>
+
+<main class="main">
+  <div class="toolbar">
+    <span class="tb-title" id="tbTitle">Website</span>
+    <span class="tb-badge" id="tbBadge" hidden>Functional prototype</span>
+    <span class="tb-sub" id="tbSub">Full-site review candidate</span>
+    <a class="tb-open" id="tbOpen" href="http://localhost:8849/" target="_blank" rel="noopener">Open in new tab &#8599;</a>
+    <button class="tb-btn" id="tbInfo" onclick="openSitePane()" hidden>How this improves the current site</button>
+  </div>
+
+  <section class="view" id="view-recs" hidden>
+    <div class="brief">
+      <p class="brief__eyebrow">North Star Communications &middot; Proposal for Eagle Build</p>
+      <h1>Recommendations</h1>
+      <p class="brief__lede">This is the case for the work shown across this hub. Not a menu of tactics, but a single connected system for making Eagle Build the builder that Stockport and Cheshire find, trust, and choose. Here is what we would build, and why each piece earns its place.</p>
+
+      <div class="brief__sec">
+        <p class="brief__num">01</p>
+        <div class="brief__body">
+          <h2>Where you stand today</h2>
+          <p>You do excellent work, and the digital presence around it may not yet reflect that. We looked at each asset covered in this hub as it stands now. This is a snapshot, and some of it could shift as pages and profiles change, but a pattern comes through: strong craft, under-served online, and a next client who may struggle to find or verify you.</p>
+          <div class="state">
+            <div class="state__row"><div class="state__k">Website</div><div class="state__v">Clean and modern, but light on content. The homepage runs to only a few hundred words, and on our visit the main hero image had not loaded, which could point to slow or unreliable loading worth checking. It may read more like a brochure than something built to answer what buyers are searching for.</div></div>
+            <div class="state__row"><div class="state__k">SEO and GEO</div><div class="state__v">In a couple of quick searches for terms like "builders in Cheadle Hulme" and "kitchen extension Cheadle Hulme", we did not see Eagle Build in the local map pack or on the first page, while competitors with their own content did appear. We also did not see the business surface in an AI overview in our checks, though that might reflect the query or how the results loaded for us. Part of the cause could be technical: we found no structured data, a meta description with a small error, and many images without descriptive text, which may make the site harder for search and AI engines to read. The earlier approach also appears to have leaned on paying for links, a path that has become expensive and fragile and that Google and the AI answer engines increasingly discount. Rankings bought that way might vanish the moment a budget stops or an algorithm shifts, leaving little that you own.</div></div>
+            <div class="state__row"><div class="state__k">Google Business Profile</div><div class="state__v">Listed as Eagle Build 2020 Limited with a 5.0 rating, though it appears to rest on a single review. The core details are present, but the profile could be doing far more with reviews, posts, photos, products and Q&amp;A.</div></div>
+            <div class="state__row"><div class="state__k">Trustpilot</div><div class="state__v">We could not find a profile, so a buyer who checks Trustpilot today may find nothing there to reassure them.</div></div>
+            <div class="state__row"><div class="state__k">Instagram</div><div class="state__v">Your strongest channel, with an engaged following (around 860) and genuine project content. This could be a foundation to build on rather than start from.</div></div>
+            <div class="state__row"><div class="state__k">Facebook</div><div class="state__v">Active but smaller (around 140 followers), and posting looks occasional, so reach may be limited today.</div></div>
+            <div class="state__row"><div class="state__k">LinkedIn</div><div class="state__v">We found a personal profile but no company page, so the business may be absent from a channel that increasingly feeds professional search and AI answers.</div></div>
+            <div class="state__row"><div class="state__k">Paid social and search</div><div class="state__v">We saw no signs of active paid campaigns, so demand that exists right now may be going uncaptured.</div></div>
+            <div class="state__row"><div class="state__k">Lead capture</div><div class="state__v">Enquiries appear to arrive by form and phone with no visible way to tell which channel produced them, so it could be hard to know what is actually working.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="brief__sec">
+        <p class="brief__num">02</p>
+        <div class="brief__body">
+          <h2>The strategy: integrated marketing that brings and converts leads</h2>
+          <p>The objective does not change: bring in the right enquiries and turn them into customers. No single tactic does that on its own. It takes a set of channels and assets working as one system, each doing the job it does best and feeding the others, with effort and budget going to whatever performs.</p>
+          <p><b>One system.</b> Your website and content answer what buyers actually search for and give them a reason to enquire. Your Google Business Profile, your Google and Trustpilot reviews make you easy to find and easy to trust. Organic social keeps you visible where your audience already spends time, and paid social captures the demand that is ready to act now. A simple CRM ties it together, so every enquiry is traced back to what produced it and the next pound goes where the last one worked.</p>
+          <p><b>Earn your place, do not rent it.</b> One principle runs through all of it. The most durable way to be found in search and AI answers is to become genuinely trustworthy in ways machines can read: real reviews, useful content, and links earned from the partners and organizations you already work with rather than bought. Earned positions are harder to lose, and they keep working after the spending stops.</p>
+          <p class="brief__aside">Every item in this hub plays a part in that system, or proves that it worked.</p>
+        </div>
+      </div>
+
+      <div class="brief__sec">
+        <p class="brief__num">03</p>
+        <div class="brief__body">
+          <h2>What we would build</h2>
+          <p>Each surface in this hub maps to a specific gap in the current state, and to a specific reason it moves the needle.</p>
+          <div class="ledger">
+            <div class="ledger__head"><span>Surface</span><span>Today</span><span>What we build</span><span>Why it could win</span></div>
+            <div class="ledger__row"><span class="lg-seg">Website &amp; content</span><span class="lg-now">A few hundred words, brochure-style, with a hero that may not load reliably.</span><span class="lg-build">Answer-first service pages and case studies targeting the questions homeowners search, written to convert rather than just look good.</span><span class="lg-why">Turns the site from a business card into a page that gets found and gets cited.</span></div>
+            <div class="ledger__row"><span class="lg-seg">SEO &amp; GEO</span><span class="lg-now">Not appearing in the local pack or on page one for key commercial searches; no schema and thin metadata.</span><span class="lg-build">Clean structured data and metadata, plus outreach to your existing and new partners to earn free, credible links. A paid linking campaign only later, if it is needed.</span><span class="lg-why">Earned visibility and links are harder to lose, and may carry more weight with search and AI engines than anything rented.</span></div>
+            <div class="ledger__row"><span class="lg-seg">Google Business Profile</span><span class="lg-now">Rated 5.0, but on what looks like a single review.</span><span class="lg-build">A complete, actively managed profile: reviews at volume with replies, weekly posts, products, and Q&amp;A.</span><span class="lg-why">Often the fastest win in local search. It helps decide the "builder near me" map pack.</span></div>
+            <div class="ledger__row"><span class="lg-seg">Trustpilot</span><span class="lg-now">No profile found.</span><span class="lg-build">A claimed, verified profile with automated review invitations and a reply on every review.</span><span class="lg-why">Independent proof that can also surface as stars in Google and feed AI trust signals.</span></div>
+            <div class="ledger__row"><span class="lg-seg">Organic social</span><span class="lg-now">Instagram is strong; Facebook is small; there is no LinkedIn company page.</span><span class="lg-build">A LinkedIn company page and a consistent program, amplifying the Instagram you already have, built from the same content.</span><span class="lg-why">Earns authority in the channels that increasingly feed AI answers.</span></div>
+            <div class="ledger__row"><span class="lg-seg">Paid social</span><span class="lg-now">No active campaigns seen.</span><span class="lg-build">Two connected engines: a traffic ad to the landing page, and a native lead-form ad carrying the full build story.</span><span class="lg-why">A co-equal growth driver that can capture demand now while the earned work compounds.</span></div>
+            <div class="ledger__row"><span class="lg-seg">Lead capture &amp; CRM</span><span class="lg-now">Enquiries arrive by form and phone, with the source unknown.</span><span class="lg-build">A simple CRM capturing every lead, its source, the page it converted on, and its stage.</span><span class="lg-why">Shows which investments produce revenue, so budget can follow the evidence.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="brief__sec">
+        <p class="brief__num">04</p>
+        <div class="brief__body">
+          <h2>How it all adds up to more leads</h2>
+          <p>Your goal is straightforward: more of the right enquiries, and more of them turning into signed projects. Every piece here points at that, and they may work best together rather than alone. It runs as one path.</p>
+          <p><b>Get found.</b> A Google Business Profile with real reviews, the Instagram you already have, a LinkedIn and content footprint that search and AI engines can read, and credible links earned from the partners you already work with, so more of the people looking for a builder actually come across you. <b>Earn trust.</b> Reviews on Google and Trustpilot, and content that answers the questions buyers ask, so the people who find you have a reason to believe you. <b>Convert.</b> A website and landing pages built to turn interest into an enquiry, not just to look good. <b>Prove it.</b> A simple CRM that captures every lead, where it came from, and whether it closed, so you can put more into what works.</p>
+          <p>Each part could feed the next. Reviews may lift how often you appear, which sends more people to a site built to convert, which produces enquiries you can trace back to the work that earned them. Nothing here rents its position: it builds an asset you own that keeps working after the spend stops, and over time that could compound into a steadier, more predictable flow of leads and customers.</p>
+          <p class="brief__aside">We would sequence it so the fastest signals move first (reviews, the profile, and the content foundation), with paid and social scaling as the proof accumulates.</p>
+        </div>
+      </div>
+
+      <div class="brief__foot">
+        <div class="brief__star" aria-hidden="true"></div>
+        <p>North Star Communications. Prepared for Eagle Build. Figures and sample content shown across this hub are illustrative until confirmed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-who" hidden>
+    <div class="brief">
+      <p class="brief__eyebrow">North Star Communications &middot; Proposal for Eagle Build</p>
+      <h1>Who we are</h1>
+      <p class="brief__lede">North Star Communications helps organizations close the gap between what they are and how they communicate. We work at the moments when communications become consequential, and we stay close enough to your team that the work feels genuine rather than produced. Everything your business needs, under one roof.</p>
+
+      <div class="brief__sec">
+        <p class="brief__num">01</p>
+        <div class="brief__body">
+          <h2>How we think</h2>
+          <p>We listen, we learn, we adapt, and we deliver. That rhythm is held together by four values that decide how we make trade-offs when the work gets hard.</p>
+          <div class="vals">
+            <div class="val"><b>Human First</b><span>Technology brings people closer together. It does not replace the relationship at the center of good communication.</span></div>
+            <div class="val"><b>Zero Distance</b><span>The best communications disappear. We work toward value flowing both ways, with no friction and no noise.</span></div>
+            <div class="val"><b>Sustainable Growth</b><span>Fast is not the same as healthy. We build growth that matches your capacity and compounds over time.</span></div>
+            <div class="val"><b>Resilient Outcomes</b><span>Markets shift and plans change. The work is designed so every outcome makes the next one stronger.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="brief__sec">
+        <p class="brief__num">02</p>
+        <div class="brief__body">
+          <h2>How we work</h2>
+          <p>We start by getting two things clear: who you are trying to reach, and what you actually want them to take away. They sound obvious, but most marketing underdelivers because one of them was fuzzy from the start. We get them right before we spend any of your budget.</p>
+          <p>From there we work in small, complete steps rather than one long plan you have to sign off up front. We put something real in front of your audience, watch what they actually do, and keep what works while dropping what does not. Each step teaches us something we carry into the next, so the work gets sharper as it goes and you can see it paying off along the way. We start focused, prove it out, and widen only once the results are there to back it.</p>
+        </div>
+      </div>
+
+      <div class="brief__sec">
+        <p class="brief__num">03</p>
+        <div class="brief__body">
+          <h2>What we do</h2>
+          <p>Seven service lines, drawn on in whatever combination the work calls for.</p>
+          <div class="svc">
+            <div class="svc__row"><div class="svc__name">Research &amp; Strategy</div><div class="svc__desc">Understand your market and your audience, then turn that into a plan built to move you forward.<span class="svc__tags">Competitive analysis &middot; audience research &middot; positioning &middot; strategy</span></div></div>
+            <div class="svc__row"><div class="svc__name">Digital Marketing</div><div class="svc__desc">Reach the right people across search and social, and turn that reach into results.<span class="svc__tags">SEO &middot; social media management &middot; Meta and LinkedIn Ads &middot; Google Ads</span></div></div>
+            <div class="svc__row"><div class="svc__name">Branding</div><div class="svc__desc">Shape how you look and what you stand for, so you are recognized and remembered.<span class="svc__tags">Identity design &middot; storytelling &middot; guidelines &middot; mission, vision and values</span></div></div>
+            <div class="svc__row"><div class="svc__name">PR</div><div class="svc__desc">Manage how the world sees you, from everyday reputation to the moments that matter most.<span class="svc__tags">Reputation management &middot; press releases &middot; presentations &middot; crisis response</span></div></div>
+            <div class="svc__row"><div class="svc__name">Content &amp; Copywriting</div><div class="svc__desc">Words and stories that earn attention and turn readers into customers.<span class="svc__tags">Storytelling &middot; SEO copy &middot; articles &middot; conversion copy</span></div></div>
+            <div class="svc__row"><div class="svc__name">Design &amp; Production</div><div class="svc__desc">Bring it all to life with design and video made for where people actually watch.<span class="svc__tags">Video &middot; graphic design &middot; digital assets &middot; production</span></div></div>
+            <div class="svc__row"><div class="svc__name">Web &amp; App Development</div><div class="svc__desc">Build the websites and apps your customers use, fast, reliable, and made to convert.<span class="svc__tags">Websites &middot; web apps &middot; mobile apps &middot; landing pages and integrations</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="brief__sec">
+        <p class="brief__num">04</p>
+        <div class="brief__body">
+          <h2>Who we have worked with</h2>
+          <p>A selection of the brands and organizations our team has delivered for, from venture-backed software to global consumer names.</p>
+          <div class="cwall" id="whoWall"></div>
+        </div>
+      </div>
+
+      <div class="brief__foot">
+        <div class="brief__star" aria-hidden="true"></div>
+        <p>North Star Communications. Prepared for Eagle Build.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-people" hidden>
+    <div class="brief">
+      <p class="brief__eyebrow">North Star Communications &middot; Proposal for Eagle Build</p>
+      <h1>Key people</h1>
+      <p class="brief__lede">You would work directly with the people below. Not an account manager passing notes to a team you never meet, but the people actually doing the thinking and the work.</p>
+      <div class="people">
+        <div class="person">
+          <div class="person__av"><img src="assets/people/milos.jpg" alt="Miloš Milosavljević"></div>
+          <div class="person__body">
+            <h3>Miloš Milosavljević</h3>
+            <p class="person__role">Founder and CEO, North Star Communications</p>
+            <p class="person__bio">Miloš has spent more than twenty years turning complicated ideas into clear, human stories, across journalism, media, non-profits, SaaS, HR tech and B2B. He loves the moment a messy problem finally clicks into a simple plan a whole team can get behind, and he has built the platforms, products and campaigns to show it works in practice. Clients tend to value the same three things in him: a systems mind that connects the product, the message and the experience; a knack for saying hard things simply; and a habit of bringing people along rather than leaving them behind. He keeps the work grounded in real discovery, sharp positioning, and a clear path to market.</p>
+          </div>
+        </div>
+        <div class="person">
+          <div class="person__av"><img src="assets/people/tijana.jpg" alt="Tijana Damjanović Gertner"></div>
+          <div class="person__body">
+            <h3>Tijana Damjanović Gertner</h3>
+            <p class="person__role">Partner and COO, North Star Communications</p>
+            <p class="person__bio">Tijana is the kind of marketer who is as comfortable setting the strategy as she is rolling up her sleeves to run it. She blends creative instinct with a sharp commercial head, across brand identity, SEO and content, and full-funnel campaigns built to bring in real business. She has organized and marketed events on the biggest stage, including Miss Universe, and she is refreshingly straight with clients: she will tell you what she would do, show you why it works, and help you avoid the expensive mistakes. Look after your people and do right by your clients, and she is firmly in your corner.</p>
+          </div>
+        </div>
+      </div>
+      <div class="brief__foot">
+        <div class="brief__star" aria-hidden="true"></div>
+        <p>North Star Communications. Prepared for Eagle Build.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-website">
+    <iframe src="http://localhost:8849/" title="Eagle Build website"></iframe>
+  </section>
+
+  <div class="sitepane-overlay" id="sitePaneOverlay" onclick="closeSitePane()"></div>
+  <aside class="sitepane" id="sitePane" aria-hidden="true" aria-label="How this website improves on the current site">
+    <div class="sitepane__top"><b>Website: a functional prototype</b><button class="sitepane__x" onclick="closeSitePane()" aria-label="Close">&times;</button></div>
+    <div class="sitepane__body">
+      <p class="sitepane__lede">This is a working prototype, not the live site. Every page, link and form is real and clickable, so you can judge the structure and the feel for yourself.</p>
+      <p class="sitepane__note">The content is a review candidate. Some copy and figures are illustrative and would be confirmed with you before anything goes live.</p>
+      <p class="sitepane__h">How it improves on the current site</p>
+      <div class="sp-point"><b>A structure a visitor can follow</b><span>The current site offers Services, Blog and Contact, and little way to move between them. This prototype organizes everything into clear sections: Services (New Builds, Extensions and each extension type), Areas, Resources (guides, insights and project case studies), About, Reviews and Contact. Breadcrumbs on every page show where you are.</span></div>
+      <div class="sp-point"><b>Pages built to answer, and to rank</b><span>Each service and area has its own page written around the questions buyers actually search, with FAQs and the structured data that search and AI engines read. The current homepage carries only a few hundred words and no structured data.</span></div>
+      <div class="sp-point"><b>Local pages that win local searches</b><span>Dedicated pages for Cheadle, Stockport, Bramhall and Wilmslow give you something to rank for "builder in [town]", which a single homepage cannot do.</span></div>
+      <div class="sp-point"><b>Proof where people look for it</b><span>Case studies, a reviews page and trust signals are built into the journey, so a visitor sees evidence before they decide to enquire.</span></div>
+      <div class="sp-point"><b>A layout that converts</b><span>A clear hero, consistent calls to action (book a site visit, WhatsApp), and a single enquiry path, so interest turns into an enquiry rather than a dead end.</span></div>
+      <p class="sitepane__kicker">In short: the current site is a brochure. This is a structure designed to be found, to build trust, and to turn visitors into enquiries.</p>
+    </div>
+  </aside>
+
+  <section class="view" id="view-cluster" hidden>
+    <div class="cluster">
+      <h1>Content cluster: Kitchen Extensions</h1>
+      <p class="lede">How the kitchen-extension content <strong>series</strong> connects to its <strong>landing page</strong>, how that landing page feeds the <strong>CRM</strong>, and how each article is amplified by <strong>social posts</strong>. Click an article's <em>posts</em> link to jump into the Social Hub filtered to it.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 1180 660" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arw" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#b8b8c0"/></marker>
+            <marker id="arwC" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#d7934d"/></marker>
+            <marker id="arwB" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#1877f2"/></marker>
+          </defs>
+          <text class="col-label" x="30" y="32">The series &middot; 5 case studies</text>
+          <text class="col-label" x="470" y="278">Pillar &middot; landing page</text>
+          <text class="col-label" x="862" y="286">CRM &middot; 7 leads</text>
+
+          <path class="wire" marker-end="url(#arw)" d="M330 99 C 400 99, 405 350, 462 350"/>
+          <path class="wire" marker-end="url(#arw)" d="M330 222 C 400 222, 405 350, 462 350"/>
+          <path class="wire" marker-end="url(#arw)" d="M330 345 C 405 345, 410 350, 462 350"/>
+          <path class="wire" marker-end="url(#arw)" d="M330 468 C 400 468, 405 350, 462 350"/>
+          <path class="wire" marker-end="url(#arw)" d="M330 591 C 400 591, 405 350, 462 350"/>
+          <path class="wire--crm" marker-end="url(#arwC)" d="M720 350 C 785 350, 795 350, 852 350"/>
+          <text class="col-label" x="470" y="32" style="fill:#1877f2">Paid &middot; Meta ads</text>
+          <path class="wire--ad" marker-end="url(#arwB)" d="M595 120 L 595 286"/>
+          <path class="wire--ad" marker-end="url(#arwB)" d="M985 120 L 985 294"/>
+
+          <foreignObject x="30" y="45" width="300" height="108"><div xmlns="http://www.w3.org/1999/xhtml" class="node node--case"><a class="node__link" href="http://localhost:8849/resources/projects/cheadle-hulme-side-return-kitchen-extension/" target="_blank" rel="noopener"><span class="node__tag">Case study &middot; Cheadle Hulme</span><span class="node__title">Side-return kitchen extension</span></a><button class="node__social" onclick="showSocial('cheadle-hulme-side-return-kitchen-extension')"><span class="pf pf--li">in</span><span class="pf pf--fb">f</span><span class="pf pf--ig">&#9673;</span> 3 posts &rarr;</button></div></foreignObject>
+          <foreignObject x="30" y="168" width="300" height="108"><div xmlns="http://www.w3.org/1999/xhtml" class="node node--case"><a class="node__link" href="http://localhost:8849/resources/projects/heaton-moor-victorian-terrace-kitchen-extension/" target="_blank" rel="noopener"><span class="node__tag">Case study &middot; Heaton Moor</span><span class="node__title">Victorian terrace kitchen</span></a><button class="node__social" onclick="showSocial('heaton-moor-victorian-terrace-kitchen-extension')"><span class="pf pf--li">in</span><span class="pf pf--fb">f</span><span class="pf pf--ig">&#9673;</span> 3 posts &rarr;</button></div></foreignObject>
+          <foreignObject x="30" y="291" width="300" height="108"><div xmlns="http://www.w3.org/1999/xhtml" class="node node--case"><a class="node__link" href="http://localhost:8849/resources/projects/bramhall-open-plan-kitchen-extension/" target="_blank" rel="noopener"><span class="node__tag">Case study &middot; Bramhall</span><span class="node__title">Open-plan kitchen extension</span></a><button class="node__social" onclick="showSocial('bramhall-open-plan-kitchen-extension')"><span class="pf pf--li">in</span><span class="pf pf--fb">f</span><span class="pf pf--ig">&#9673;</span> 3 posts &rarr;</button></div></foreignObject>
+          <foreignObject x="30" y="414" width="300" height="108"><div xmlns="http://www.w3.org/1999/xhtml" class="node node--case"><a class="node__link" href="http://localhost:8849/resources/projects/wilmslow-bungalow-kitchen-diner-extension/" target="_blank" rel="noopener"><span class="node__tag">Case study &middot; Wilmslow</span><span class="node__title">Bungalow kitchen-diner</span></a><button class="node__social" onclick="showSocial('wilmslow-bungalow-kitchen-diner-extension')"><span class="pf pf--li">in</span><span class="pf pf--fb">f</span><span class="pf pf--ig">&#9673;</span> 3 posts &rarr;</button></div></foreignObject>
+          <foreignObject x="30" y="537" width="300" height="108"><div xmlns="http://www.w3.org/1999/xhtml" class="node node--case"><a class="node__link" href="http://localhost:8849/resources/projects/cheadle-1970s-kitchen-extension-reconfiguration/" target="_blank" rel="noopener"><span class="node__tag">Case study &middot; Cheadle</span><span class="node__title">1970s reconfiguration</span></a><button class="node__social" onclick="showSocial('cheadle-1970s-kitchen-extension-reconfiguration')"><span class="pf pf--li">in</span><span class="pf pf--fb">f</span><span class="pf pf--ig">&#9673;</span> 3 posts &rarr;</button></div></foreignObject>
+
+          <foreignObject x="470" y="290" width="250" height="120"><a xmlns="http://www.w3.org/1999/xhtml" class="node node--lp node__link" href="http://localhost:8849/extensions/kitchen/" target="_blank" rel="noopener"><span class="node__tag">Landing page</span><span class="node__title">Kitchen Extensions</span><span class="node__meta">The pillar the series links to &rarr;</span></a></foreignObject>
+          <foreignObject x="860" y="298" width="250" height="105"><div xmlns="http://www.w3.org/1999/xhtml" class="node node--crm" style="border-style:solid;cursor:pointer" onclick="showCrm()"><span class="node__tag">CRM &middot; live</span><span class="node__title">Leads &amp; pipeline</span><span class="node__meta">7 leads &middot; click to open &rarr;</span></div></foreignObject>
+          <foreignObject x="470" y="42" width="250" height="76"><div xmlns="http://www.w3.org/1999/xhtml" class="node node--ad" onclick="showAds()"><span class="node__tag">Meta Ad &middot; Traffic</span><span class="node__title">Drives to the landing page &darr;</span></div></foreignObject>
+          <foreignObject x="860" y="42" width="250" height="76"><div xmlns="http://www.w3.org/1999/xhtml" class="node node--ad" onclick="showAds()"><span class="node__tag">Meta Ad &middot; Lead form (carousel)</span><span class="node__title">Native form &rarr; CRM &darr;</span></div></foreignObject>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><span class="swatch" style="background:#fff;border:1px solid var(--hairline)"></span> Case study (series)</span>
+        <span><span class="swatch" style="background:var(--charcoal)"></span> Landing page (pillar)</span>
+        <span><span class="swatch" style="background:var(--copper-tint);border:2px dashed var(--copper)"></span> CRM object (coming soon)</span>
+        <span><span class="pf pf--li" style="width:15px;height:15px">in</span><span class="pf pf--fb" style="width:15px;height:15px">f</span><span class="pf pf--ig" style="width:15px;height:15px">&#9673;</span> 3 social posts per article</span>
+      </div>
+      <div class="cluster-note"><strong>How it works:</strong> five case studies link up to the Kitchen Extensions landing page (the pillar), which feeds the CRM. Each article is amplified by three social posts (one click away in the Social Hub). And two <strong>Meta ads</strong> drive paid demand: a traffic ad into the landing page, and a native lead-form ad (with a build-process carousel) straight into the CRM.</div>
+    </div>
+  </section>
+
+  <section class="view" id="view-social" hidden>
+    <div class="social">
+      <h1>Social hub: Kitchen Extensions</h1>
+      <p class="lede">15 posts &middot; 5 case studies &middot; 3 platforms &middot; creative generated with Higgsfield. Each post maps to its case study.</p>
+      <div class="filters">
+        <span class="chip active" data-pf="all" onclick="setPlatform('all')">All platforms</span>
+        <span class="chip" data-pf="linkedin" onclick="setPlatform('linkedin')"><span class="dot" style="background:var(--li)"></span>LinkedIn</span>
+        <span class="chip" data-pf="facebook" onclick="setPlatform('facebook')"><span class="dot" style="background:var(--fb)"></span>Facebook</span>
+        <span class="chip" data-pf="instagram" onclick="setPlatform('instagram')"><span class="dot" style="background:var(--ig)"></span>Instagram</span>
+        <span class="article-filter" id="artFilter"></span>
+      </div>
+      <div id="socialContent"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-ads" hidden>
+    <div class="ads">
+      <h1>Meta ads: Kitchen Extensions</h1>
+      <p class="lede">Two paid ads &middot; creative generated with Higgsfield. <strong>Ad 1</strong> drives traffic to the landing page. <strong>Ad 2</strong> captures leads with a native Meta Instant Form and a carousel walking through how a kitchen extension is built. The lead flows straight to the CRM.</p>
+      <div class="ad-grid">
+
+        <div>
+          <p class="ad-label">Ad 1 &middot; Traffic &rarr; Landing page</p>
+          <div class="fb">
+            <div class="fb__head"><div class="fb__avatar"><img src="logo.svg" alt=""></div><div class="fb__who"><b>Eagle Build</b><span>Sponsored &middot; &#127760;</span></div></div>
+            <div class="fb__text">Dreaming of a bright, open-plan kitchen? &#10024; Eagle Build designs and builds bespoke kitchen extensions across Stockport, Cheadle &amp; Cheshire &mdash; under one roof, from first sketch to finished room. FMB-registered &middot; award-winning. Book your free site visit.</div>
+            <div class="fb__media"><img src="assets/social/bramhall-open-plan-kitchen-extension.png" alt="Finished kitchen extension"></div>
+            <div class="fb__link"><div class="lk"><small>eaglebuild.co.uk</small><b>Kitchen Extensions in Manchester &amp; Cheshire</b><span>Bespoke design-and-build. Book a free site visit.</span></div><a class="fb__cta" href="http://localhost:8849/extensions/kitchen/" target="_blank" rel="noopener">Learn More</a></div>
+            <div class="fb__react"><span>&#128077; Like</span><span>&#128172; Comment</span><span>&#10150; Share</span></div>
+          </div>
+          <p style="font-size:.8rem;color:var(--ink-muted);margin-top:.9rem;max-width:500px">Objective: <b>Traffic / conversions</b>. Sends the click to the Kitchen Extensions landing page, where the enquiry form then feeds the CRM.</p>
+        </div>
+
+        <div>
+          <p class="ad-label blue">Ad 2 &middot; Lead form (native) &rarr; CRM</p>
+          <div class="fb">
+            <div class="fb__head"><div class="fb__avatar"><img src="logo.svg" alt=""></div><div class="fb__who"><b>Eagle Build</b><span>Sponsored &middot; &#127760;</span></div></div>
+            <div class="fb__text">Ever wondered how a kitchen extension actually comes together? &#128064; Swipe through the full journey &mdash; from first design to your finished room &mdash; then get a free, no-obligation quote in under a minute. No website visit needed.</div>
+            <p class="carousel-hint">Swipe the story &rarr;</p>
+            <div class="carousel-wrap">
+              <button class="car-arrow prev" onclick="carScroll(-1)" aria-label="Previous slide">&#8249;</button>
+              <button class="car-arrow next" onclick="carScroll(1)" aria-label="Next slide">&#8250;</button>
+              <div class="carousel">
+                <div class="cc" onclick="ccClick(this)"><img src="assets/ads/step-1.png" alt="Design"><div class="cc__b"><span class="step">01 &middot; Design &amp; planning</span><b>We design around how you live</b><p>Bespoke drawings from our in-house architects &mdash; and we handle planning for you.</p></div></div>
+                <div class="cc" onclick="ccClick(this)"><img src="assets/ads/step-2.png" alt="Groundworks"><div class="cc__b"><span class="step">02 &middot; Groundworks</span><b>Foundations done right</b><p>Engineered for your ground conditions &mdash; the stage budgets quietly hinge on.</p></div></div>
+                <div class="cc" onclick="ccClick(this)"><img src="assets/ads/step-3.png" alt="Structure"><div class="cc__b"><span class="step">03 &middot; Structure &amp; steel</span><b>Opening the space up</b><p>Steel and brickwork create the wide, open plan &mdash; cleanly and safely.</p></div></div>
+                <div class="cc" onclick="ccClick(this)"><img src="assets/ads/step-4.png" alt="Glazing"><div class="cc__b"><span class="step">04 &middot; Light &amp; glazing</span><b>Flooded with daylight</b><p>Bi-fold doors and a roof lantern connect the room to the garden.</p></div></div>
+                <div class="cc" onclick="ccClick(this)"><img src="assets/ads/step-5.png" alt="Finished"><div class="cc__b"><span class="step">05 &middot; Your finished kitchen</span><b>Snagged, warrantied, done</b><p>Ready to enjoy. Tap below for your free quote in under a minute.</p></div></div>
+              </div>
+            </div>
+            <div class="fb__link"><div class="lk"><small>Instant form &middot; no website needed</small><b>Get your free kitchen extension quote</b><span>Takes under a minute</span></div><button class="fb__cta primary" onclick="openLead()">Get quote</button></div>
+            <div class="fb__react"><span>&#128077; Like</span><span>&#128172; Comment</span><span>&#10150; Share</span></div>
+          </div>
+          <p style="font-size:.8rem;color:var(--ink-muted);margin-top:.9rem;max-width:500px">Objective: <b>Lead generation</b>. The <b>native Instant Form</b> opens inside Meta &mdash; no landing page &mdash; and the captured lead flows <b>straight into the CRM</b>. <a onclick="openLead()" style="color:var(--copper-dark);font-weight:700;cursor:pointer">Preview the form &rarr;</a></p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="lead-overlay" id="leadOverlay">
+      <div class="lead">
+        <div class="lead__top"><button class="lead__x" onclick="closeLead()">&#10005;</button><img src="logo.svg" alt="Eagle Build"><h3>Get your free kitchen extension quote</h3><p>Tell us about your project &mdash; we'll be in touch within one business day. No obligation.</p></div>
+        <div class="lead__body" id="leadBody">
+          <form onsubmit="submitLead(event)">
+            <label>Full name</label><input required placeholder="Your name">
+            <label>Email</label><input type="email" required placeholder="you@email.com">
+            <label>Phone</label><input required placeholder="07..." >
+            <label>Postcode</label><input required placeholder="SK8...">
+            <label>Project type</label><select><option>New kitchen extension</option><option>Open-plan kitchen-diner</option><option>Extension + reconfiguration</option><option>Not sure yet</option></select>
+            <label>Ideal start</label><select><option>As soon as possible</option><option>In 3&ndash;6 months</option><option>Just exploring</option></select>
+            <p class="priv">By submitting, you agree to be contacted by Eagle Build. We'll never share your details. <em>In Meta's real Instant Form, these fields pre-fill from the user's profile.</em></p>
+            <button class="submit" type="submit">Get my quote</button>
+            <p class="instant">&#128274; Meta Instant Form &middot; never leaves the app</p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-gbp" hidden>
+    <div class="gbp">
+      <h1>Google Business Profile</h1>
+      <p class="lede">Eagle Build's Google Business Profile is claimed and active, but review-starved and thinly optimised. For a local trade it is the single highest-return channel. Below is where it stands today, and how it should look once it is worked properly.</p>
+      <div class="gbp-audit">
+        <p class="eyebrow">Current state</p>
+        <h2>Claimed, but review-starved</h2>
+        <p>The profile is verified and active (5.0, category "Building firm", the correct Cheadle Hulme address, the occasional owner post), yet it carries almost no Google reviews and very little in the way of posts, products or Q&amp;A. Reviews and a complete profile are what drive the Google local pack that decides "builder near me", so this is the fastest win available.</p>
+        <div class="audit-grid">
+          <div class="audit-cell"><div class="lab">Reviews</div><div class="val"><span class="now">~0</span><span class="arrow">&rarr;</span><span class="tgt">40+</span></div></div>
+          <div class="audit-cell"><div class="lab">Posts</div><div class="val"><span class="now">Rare</span><span class="arrow">&rarr;</span><span class="tgt">Weekly</span></div></div>
+          <div class="audit-cell"><div class="lab">Products / catalogue</div><div class="val"><span class="now">None</span><span class="arrow">&rarr;</span><span class="tgt">Full</span></div></div>
+          <div class="audit-cell"><div class="lab">Questions &amp; answers</div><div class="val"><span class="now">None</span><span class="arrow">&rarr;</span><span class="tgt">Seeded</span></div></div>
+          <div class="audit-cell"><div class="lab">Photos</div><div class="val"><span class="now">Few</span><span class="arrow">&rarr;</span><span class="tgt">50+</span></div></div>
+          <div class="audit-cell"><div class="lab">Review responses</div><div class="val"><span class="now">None</span><span class="arrow">&rarr;</span><span class="tgt">100%</span></div></div>
+        </div>
+      </div>
+      <p class="gbp-sub">How it should look</p>
+      <p class="gbp-note">Illustrative target-state profile. Sample reviews, posts, products and Q&amp;A show the optimised profile to build toward, styled as it would appear on Google.</p>
+      <div class="g" id="gbpMock"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-tp" hidden>
+    <div class="gbp">
+      <h1>Trustpilot</h1>
+      <p class="lede">Eagle Build has no Trustpilot presence yet. It is where high-intent buyers go to sanity-check a builder before they commit, and an empty result reads as a red flag. A claimed, actively-invited profile turns third-party proof into a conversion asset you own. Below is the current gap, and the profile to build toward.</p>
+      <div class="gbp-audit">
+        <p class="eyebrow">Current state</p>
+        <h2>No Trustpilot presence yet</h2>
+        <p>There is no claimed Trustpilot profile for eaglebuild.co.uk, so a prospective client searching "Eagle Build reviews" finds nothing to reassure them. Trustpilot reviews also surface as star ratings in Google search and Google Ads, so the gap costs visibility beyond Trustpilot itself. The fix is a claimed profile with automated review invitations after every handover, and a reply on every review.</p>
+        <div class="audit-grid">
+          <div class="audit-cell"><div class="lab">TrustScore</div><div class="val"><span class="now">None</span><span class="arrow">&rarr;</span><span class="tgt">4.8</span></div></div>
+          <div class="audit-cell"><div class="lab">Reviews</div><div class="val"><span class="now">0</span><span class="arrow">&rarr;</span><span class="tgt">30+</span></div></div>
+          <div class="audit-cell"><div class="lab">Profile</div><div class="val"><span class="now">Unclaimed</span><span class="arrow">&rarr;</span><span class="tgt">Claimed</span></div></div>
+          <div class="audit-cell"><div class="lab">Invitations</div><div class="val"><span class="now">None</span><span class="arrow">&rarr;</span><span class="tgt">Automated</span></div></div>
+          <div class="audit-cell"><div class="lab">Review responses</div><div class="val"><span class="now">None</span><span class="arrow">&rarr;</span><span class="tgt">100%</span></div></div>
+          <div class="audit-cell"><div class="lab">Google star ratings</div><div class="val"><span class="now">Off</span><span class="arrow">&rarr;</span><span class="tgt">On</span></div></div>
+        </div>
+      </div>
+      <p class="gbp-sub">How it should look</p>
+      <p class="gbp-note">Illustrative target-state profile. Sample TrustScore and reviews show the claimed Trustpilot profile to build toward, styled as it would appear on Trustpilot.</p>
+      <div class="tp" id="tpMock"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-crm" hidden>
+    <div class="crm">
+      <h1>CRM: leads and pipeline</h1>
+      <p class="lede">Every enquiry from the funnel (website forms, the Meta lead-form ad, organic social and paid), captured with source, UTM attribution, the converting page and pipeline stage. Click a lead to open it.</p>
+      <div class="stage-filter" id="stageFilter"></div>
+      <div id="crmList"></div>
+    </div>
+    <div class="drawer-ov" id="drawerOv" onclick="closeCrmLead()"></div>
+    <aside class="drawer" id="crmDrawer" aria-hidden="true"><div id="drawerContent"></div></aside>
+  </section>
+</main>
+
+<script>
+  var WEB = "http://localhost:8849/";
+  var PF = {
+    linkedin:{name:"LinkedIn", cls:"li", tag:"in"},
+    facebook:{name:"Facebook", cls:"fb", tag:"f"},
+    instagram:{name:"Instagram", cls:"ig", tag:"◉"}
+  };
+  var DATA = [
+    {slug:"cheadle-hulme-side-return-kitchen-extension", title:"Side-return kitchen extension", location:"Cheadle Hulme",
+     img:"assets/social/cheadle-hulme-side-return-kitchen-extension.png",
+     article:WEB+"resources/projects/cheadle-hulme-side-return-kitchen-extension/",
+     posts:{
+      linkedin:{cap:`Some homes just need room to breathe.
+
+When Sarah and James called us, their 1930s Cheadle Hulme semi had a dark, cramped galley kitchen that their young family had simply outgrown. Lovely house, wrong flow. The light stopped at the back door.
+
+Our answer: a wrap-around side-return combined with a single-storey rear extension, opening the whole ground floor into one bright kitchen-diner. Bi-fold doors pull the garden inside, and a roof lantern floods the space with light from above.
+
+Delivered in 14 weeks, with the family living on-site throughout — real communication, tidy sites and respect for a home that's still very much lived in.
+
+This is the work we love: honest, well-built craft that quietly changes how a family lives.`, tags:["#KitchenExtension","#SideReturn","#CheadleHulme","#HomeRenovation","#DesignAndBuild","#GreaterManchester"]},
+      facebook:{cap:`From cramped and dark to bright and full of life. ✨
+
+When we first met Sarah and James, their 1930s Cheadle Hulme semi had a tight, dim galley kitchen their growing family had well and truly outgrown. Fast forward 14 weeks and it's a wide-open kitchen-diner with bi-fold doors onto the garden and a roof lantern pouring light in from above. 🌿
+
+And yes, the family stayed living at home the whole way through — that takes trust, tidy work and proper communication.
+
+A proud family-run builder serving Stockport, Cheadle Hulme and across Cheshire. 🏡`, tags:[]},
+      instagram:{cap:`Dark galley kitchen ➡️ light-filled kitchen-diner. ✨
+
+Sarah & James's 1930s Cheadle Hulme semi had all the charm and none of the space. So we wrapped a side-return around it, added a single-storey rear extension, and opened the whole ground floor up. 🙌
+
+Bi-fold doors onto the garden. A roof lantern flooding it with light. 14 weeks, family living on-site the whole time. 🏡
+
+Full case study on our website. Link in bio. 👆`, tags:["#kitchenextension","#sidereturn","#cheadlehulme","#stockport","#cheshire","#greatermanchester","#homerenovation","#kitchendiner","#bifolddoors","#rooflantern","#openplanliving","#homeextension","#designandbuild","#familyhome"]}
+     }},
+    {slug:"heaton-moor-victorian-terrace-kitchen-extension", title:"Victorian terrace kitchen", location:"Heaton Moor",
+     img:"assets/social/heaton-moor-victorian-terrace-kitchen-extension.png",
+     article:WEB+"resources/projects/heaton-moor-victorian-terrace-kitchen-extension/",
+     posts:{
+      linkedin:{cap:`A dark galley kitchen and a wasted side return — the classic Victorian terrace compromise. Priya and Tom knew their Heaton Moor home had more to give; it just needed the space unlocked.
+
+Our answer: a rear and side-return infill extension that reclaims every inch of that forgotten alley. A roof lantern pours daylight into the heart of the home. A Crittall-style internal screen zones the space without closing it off. And reclaimed, colour-matched brick means the new work sits quietly alongside 120 years of period character — as if it had always been there.
+
+The craft is often in the parts you never see: careful party-wall handling with neighbours, and a build delivered in 12 weeks.`, tags:["#KitchenExtension","#SideReturn","#VictorianTerrace","#HeatonMoor","#DesignAndBuild","#Stockport"]},
+      facebook:{cap:`There's nothing quite like a Heaton Moor Victorian terrace — but that dark galley kitchen and narrow side return? Not making the most of a beautiful home. 🏡
+
+Priya and Tom trusted us to change that. We opened up the rear and reclaimed the side return, added a stunning roof lantern for all-day light, and used a Crittall-style screen to keep the space open yet defined. Colour-matched reclaimed brick blends seamlessly with the home's original character. ✨
+
+Start to finish in 12 weeks, with careful party-wall work to keep the neighbours happy too.`, tags:[]},
+      instagram:{cap:`Dark galley in. Light-filled kitchen out. ✨
+
+This Heaton Moor Victorian terrace was hiding a wasted side return — so we reclaimed it. 🧱 Rear + side-return infill, a roof lantern for all-day light, a Crittall-style screen, and colour-matched reclaimed brick that blends like it's always been there.
+
+12 weeks, start to finish. 🔨
+
+See the full transformation — link in bio. 👆`, tags:["#kitchenextension","#heatonmoor","#victorianterrace","#crittall","#sidereturn","#stockport","#cheshire","#periodhome","#homerenovation","#rooflantern","#designandbuild","#homeextension","#reclaimedbrick"]}
+     }},
+    {slug:"bramhall-open-plan-kitchen-extension", title:"Open-plan kitchen extension", location:"Bramhall",
+     img:"assets/social/bramhall-open-plan-kitchen-extension.png",
+     article:WEB+"resources/projects/bramhall-open-plan-kitchen-extension/",
+     posts:{
+      linkedin:{cap:`The kitchen table is where family life actually happens. So when the Hargreaves came to us, that's exactly where we started.
+
+Their large detached home in Bramhall had everything except the one thing they wanted most: a kitchen built for the way they love to entertain. The old space was dated and closed off, cutting the cook off from the conversation.
+
+Our design-and-build team reimagined the entire rear of the house as one generous open-plan space. A large central island to gather around. Full-width Crittall-style sliding doors to the garden. A roof lantern pouring light across the room. And a separate utility and pantry to keep the clutter out of sight.
+
+Sixteen weeks from first drawing to final finish — one accountable team from concept to completion.`, tags:["#DesignAndBuild","#KitchenExtension","#OpenPlanLiving","#Bramhall","#HomeRenovation","#PremiumBuild"]},
+      facebook:{cap:`There's a reason we called this one "A Bramhall Home Reimagined Around the Kitchen Table" 🍽️
+
+The Hargreaves love to entertain, but their dated, closed-off kitchen just wasn't built for it. So we transformed the rear of their beautiful Bramhall home into a bright, open-plan space made for gathering: a large central island, full-width Crittall-style sliding doors onto the garden, and a stunning roof lantern overhead. ✨
+
+We even added a separate utility and pantry to keep everyday life tidy. All finished to a premium standard in just 16 weeks. 🏡`, tags:[]},
+      instagram:{cap:`Reimagined around the kitchen table. 🍽️✨
+
+The Hargreaves love to entertain, so we opened up the whole rear of their Bramhall home into one showstopping space.
+
+Large central island 🔥
+Full-width Crittall-style sliding doors
+Roof lantern flooding the room with light ☀️
+Separate utility + pantry
+Premium finish, 16 weeks
+
+This is what design-and-build looks like when it's done right. 🏡`, tags:["#kitchenextension","#bramhall","#openplanliving","#kitchenisland","#crittalldoors","#rooflantern","#homeextension","#stockport","#cheshire","#designandbuild","#premiumbuild","#kitchendesign","#dreamkitchen"]}
+     }},
+    {slug:"wilmslow-bungalow-kitchen-diner-extension", title:"Bungalow kitchen-diner", location:"Wilmslow",
+     img:"assets/social/wilmslow-bungalow-kitchen-diner-extension.png",
+     article:WEB+"resources/projects/wilmslow-bungalow-kitchen-diner-extension/",
+     posts:{
+      linkedin:{cap:`The best homes aren't just built for how we live now — they're designed for how we'll live in twenty years.
+
+When David and Angela decided to downsize to a detached bungalow in Wilmslow, they had a clear brief: a bright, sociable kitchen-diner that would stay easy to love and easy to live in as they grow older. Not a compromise — a genuinely beautiful space that happens to be thoughtful about the future.
+
+Our answer was a single-storey rear extension flooded with light: sliding doors and a roof lantern, underfloor heating underfoot, and a level threshold that opens seamlessly onto the garden. Low-maintenance materials throughout mean less upkeep and more living.
+
+Delivered in 15 weeks — proof that accessibility and elegance belong together.`, tags:["#DesignAndBuild","#KitchenExtension","#AccessibleDesign","#Cheshire","#Wilmslow","#FMBMember"]},
+      facebook:{cap:`A Wilmslow bungalow, beautifully reborn. ✨
+
+When David and Angela downsized to their detached bungalow, they wanted one thing above all: a bright, sociable kitchen-diner that would work just as well for them in the years to come. 🏡
+
+So we created a light-filled single-storey extension with sliding doors, a stunning roof lantern, cosy underfloor heating and a level threshold straight out to the garden — all in low-maintenance materials. Sociable, low-fuss, and made to last.
+
+Proud to bring this one to life for a lovely local family, right here in Cheshire. 💛`, tags:[]},
+      instagram:{cap:`Light, space and a garden that flows right in. ☀️
+
+David and Angela's Wilmslow bungalow got a bright, sociable kitchen-diner built for life. Single-storey extension, sliding doors, roof lantern, underfloor heating and a level threshold to the garden. Low-maintenance, low-fuss, all beauty. 🏡✨
+
+15 weeks from start to finish.
+
+Full project story, link in bio. 👆`, tags:["#kitchenextension","#wilmslow","#bungalowextension","#kitchendiner","#indooroutdoorliving","#rooflantern","#slidingdoors","#cheshire","#greatermanchester","#homeextension","#designandbuild","#underfloorheating","#accessiblehome","#dreamkitchen"]}
+     }},
+    {slug:"cheadle-1970s-kitchen-extension-reconfiguration", title:"1970s reconfiguration", location:"Cheadle",
+     img:"assets/social/cheadle-1970s-kitchen-extension-reconfiguration.png",
+     article:WEB+"resources/projects/cheadle-1970s-kitchen-extension-reconfiguration/",
+     posts:{
+      linkedin:{cap:`The Osei family had all but decided to move. Their 1970s Cheadle detached had good bones, but a small, closed-off kitchen and a warren of compartmentalised rooms made everyday family life a squeeze.
+
+Instead of a for-sale board, they chose to improve rather than move.
+
+Our answer wasn't just a box on the back. We paired a rear kitchen extension with a careful internal reconfiguration, taking down the right walls to create a single open-plan kitchen-family-dining space. A generous island now anchors the room, bi-fold doors pull the garden inside, and a new utility and boot room absorb the chaos of a growing family.
+
+Start to finish: 14 weeks. Sometimes the best move is the one you don't make.`, tags:["#KitchenExtension","#ImproveDontMove","#Cheadle","#DesignAndBuild","#HomeRenovation","#GreaterManchester"]},
+      facebook:{cap:`Meet the Osei family from Cheadle. Their 1970s detached home was full of potential, but a cramped kitchen and lots of little separate rooms had them close to moving away. 🏡
+
+So we helped them improve instead of move. We combined a rear kitchen extension with some clever knock-throughs to create one bright, open-plan kitchen-family-dining space — a statement island, bi-fold doors onto the garden, and a handy new utility and boot room. All in just 14 weeks. ✨
+
+They get to stay in the Cheadle community they love, in a home that now works beautifully for family life. 👏`, tags:[]},
+      instagram:{cap:`Nearly moved. So glad they didn't. 🙌
+
+The Osei family's 1970s Cheadle home had a poky kitchen and too many walls. Our fix? A rear extension PLUS internal knock-throughs = one stunning open-plan kitchen-family-dining space. 🍳
+
+Island ✔️ Bi-fold doors ✔️ New utility + boot room ✔️
+All in 14 weeks. ✨
+
+Improve, don't move. 🏡
+
+Full case study — link in bio. 👆`, tags:["#kitchenextension","#cheadle","#improvedontmove","#openplankitchen","#homereconfiguration","#stockport","#cheshire","#greatermanchester","#kitchenisland","#bifolddoors","#homeextension","#designandbuild","#familyhome","#kitchengoals"]}
+     }}
+  ];
+
+  var state = {platform:"all", article:null};
+
+  function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+  function postCard(a, key){
+    var p = a.posts[key], m = PF[key];
+    var tags = p.tags.length ? '<div class="post__tags">'+p.tags.map(esc).join(' ')+'</div>' : '';
+    return '<div class="post '+m.cls+'">'
+      + '<div class="post__bar"><span class="post__pf" style="background:var(--'+m.cls+')">'+m.tag+'</span><b>'+m.name+'</b><small>maps to article</small></div>'
+      + '<img class="post__img" src="'+a.img+'" alt="'+esc(a.title)+'">'
+      + '<div class="post__body"><div class="post__cap">'+esc(p.cap)+'</div>'+tags
+      + '<div class="post__foot"><b>'+esc(a.title)+'</b> &middot; '+esc(a.location)+'</div></div></div>';
+  }
+
+  function renderSocial(){
+    var arts = state.article ? DATA.filter(function(a){return a.slug===state.article}) : DATA;
+    var keys = state.platform==="all" ? ["linkedin","facebook","instagram"] : [state.platform];
+    var html = arts.map(function(a){
+      var cards = keys.map(function(k){return postCard(a,k)}).join('');
+      return '<div class="art-group"><div class="art-head"><img src="'+a.img+'" alt=""><div class="meta"><h3>'+esc(a.title)+'</h3><span>Case study &middot; '+esc(a.location)+' &middot; '+keys.length+' post'+(keys.length>1?'s':'')+'</span></div>'
+        + '<div class="links"><a href="'+a.article+'" target="_blank" rel="noopener">View article &#8599;</a><a onclick="gotoCluster()">In cluster</a></div></div>'
+        + '<div class="posts">'+cards+'</div></div>';
+    }).join('');
+    document.getElementById('socialContent').innerHTML = html;
+    var af = document.getElementById('artFilter');
+    af.innerHTML = state.article ? ('Filtered to <b>'+esc(arts[0].title)+'</b><a onclick="clearArticle()">show all articles</a>') : '';
+  }
+  function setPlatform(pf){
+    state.platform = pf;
+    document.querySelectorAll('.chip').forEach(function(c){c.classList.toggle('active', c.getAttribute('data-pf')===pf)});
+    renderSocial();
+  }
+  function clearArticle(){ state.article=null; renderSocial(); }
+  function gotoCluster(){ switchView('cluster'); }
+  function showSocial(slug){ state.article=slug; switchView('social'); renderSocial(); }
+
+  var VIEWS = {
+    recs:{title:"Recommendations", sub:"Why we would build this, and how it improves on today", open:WEB, openLabel:"Open the website ↗"},
+    who:{title:"Who We Are", sub:"North Star Communications · approach, services, and work", open:WEB, openLabel:"Open the website ↗"},
+    people:{title:"Key People", sub:"The people who would run the work", open:WEB, openLabel:"Open the website ↗"},
+    website:{title:"Website", sub:"Functional prototype · review candidate, not the live site", open:WEB, openLabel:"Open in new tab ↗"},
+    cluster:{title:"Content Cluster example", sub:"Kitchen Extensions", open:WEB+"extensions/kitchen/", openLabel:"Open landing page ↗"},
+    social:{title:"Organic Posts", sub:"Kitchen Extensions · 15 posts", open:WEB+"extensions/kitchen/", openLabel:"Open landing page ↗"},
+    ads:{title:"Meta Ads", sub:"Kitchen Extensions · 2 ads", open:WEB+"extensions/kitchen/", openLabel:"Open landing page ↗"},
+    gbp:{title:"Google Business Profile", sub:"Reviews · posts · products · Q&A", open:"https://www.google.com/maps/search/Eagle+Build+Cheadle+Hulme", openLabel:"Open in Google Maps ↗"},
+    tp:{title:"Trustpilot", sub:"TrustScore · reviews · verified profile", open:"https://www.trustpilot.com/review/eaglebuild.co.uk", openLabel:"Open on Trustpilot ↗"},
+    crm:{title:"CRM", sub:"Leads & pipeline · 7 leads", open:WEB+"contact/#enquire", openLabel:"Open enquiry form ↗"}
+  };
+  function showAds(){ switchView('ads'); }
+
+  // ---------- CRM ----------
+  var STAGES = {"New":"st-new","Contacted":"st-contacted","Site visit booked":"st-visit","Quoted":"st-quoted","Won":"st-won","Lost":"st-lost"};
+  var STAGE_ORDER = ["New","Contacted","Site visit booked","Quoted","Won","Lost"];
+  var CRM = [
+    {id:"L-1042", name:"Sarah Whitfield", email:"sarah.whitfield@gmail.com", phone:"07700 900123", postcode:"SK8 6QR",
+     projectType:"Open-plan kitchen-diner", idealStart:"In 3–6 months",
+     message:"Saw the build-process carousel on Facebook. We've got a 1930s semi in Cheadle Hulme and want a side-return kitchen extension.",
+     page:"Meta Instant Form · Ad 2 (lead form)", pageUrl:null, srcShort:"Meta lead form", srcKind:"paid",
+     utm:{source:"facebook",medium:"paid-social",campaign:"kitchen-extensions-2026",content:"lead-form-carousel",term:"—"},
+     stage:"New", date:"15 Jul 2026", notes:"Native lead-form submission (no website visit). High intent — mentioned side-return. Call to book a site visit."},
+    {id:"L-1041", name:"Tom Shah", email:"tom.shah@outlook.com", phone:"07700 900456", postcode:"SK4 4LZ",
+     projectType:"Kitchen extension", idealStart:"As soon as possible",
+     message:"Victorian terrace in Heaton Moor — want to reclaim the side return and open up the kitchen.",
+     page:"/extensions/kitchen/", pageUrl:WEB+"extensions/kitchen/", srcShort:"Landing page (paid)", srcKind:"paid",
+     utm:{source:"facebook",medium:"paid-social",campaign:"kitchen-extensions-2026",content:"traffic-ad",term:"—"},
+     stage:"Contacted", date:"13 Jul 2026", notes:"Clicked the traffic ad → landing page → enquiry form. Called 14/07, arranging site visit. Party-wall considerations."},
+    {id:"L-1039", name:"James Hartley", email:"j.hartley@icloud.com", phone:"07700 900789", postcode:"SK7 1AB",
+     projectType:"Kitchen extension", idealStart:"In 3–6 months",
+     message:"Loved your Bramhall open-plan case study — want something similar with a big island and Crittall doors.",
+     page:"/extensions/kitchen/ (via Bramhall case study)", pageUrl:WEB+"extensions/kitchen/", srcShort:"Organic Instagram", srcKind:"social",
+     utm:{source:"instagram",medium:"social",campaign:"kitchen-series",content:"bramhall-post",term:"—"},
+     stage:"Site visit booked", date:"10 Jul 2026", notes:"From the Bramhall Instagram post → case study → landing page. Site visit booked 18/07. Premium budget."},
+    {id:"L-1035", name:"Angela Roberts", email:"angela.roberts@gmail.com", phone:"07700 900222", postcode:"SK9 5DP",
+     projectType:"Not sure yet", idealStart:"Just exploring",
+     message:"Downsized to a bungalow in Wilmslow, thinking about a bright kitchen-diner extension. Accessibility matters.",
+     page:"/new-builds/ (via 'Renovation vs New Build' guide)", pageUrl:WEB+"new-builds/", srcShort:"Organic search", srcKind:"organic",
+     utm:{source:"google",medium:"organic",campaign:"—",content:"—",term:"renovation vs new build"},
+     stage:"Quoted", date:"5 Jul 2026", notes:"Found the 'renovation vs new build' guide via Google → New Builds page → enquiry. Quote sent 12/07 (~£68k). Level threshold + underfloor heating important. Follow up."},
+    {id:"L-1033", name:"Mark Davies", email:"mark.davies@btinternet.com", phone:"07700 900444", postcode:"SK6 1AF",
+     projectType:"Refurbishment", idealStart:"In 3–6 months",
+     message:"Kitchen and bathroom refurb in Bredbury.",
+     page:"/refurbishment/", pageUrl:WEB+"refurbishment/", srcShort:"Google Ads", srcKind:"paid",
+     utm:{source:"google",medium:"cpc",campaign:"refurb-search",content:"—",term:"kitchen refurbishment stockport"},
+     stage:"Contacted", date:"12 Jul 2026", notes:"Paid search → refurbishment page. Emailed 13/07. Smaller job — qualify budget before a site visit."},
+    {id:"L-1028", name:"Grace Osei", email:"grace.osei@gmail.com", phone:"07700 900333", postcode:"SK8 2NP",
+     projectType:"Extension + reconfiguration", idealStart:"As soon as possible",
+     message:"1970s detached in Cheadle. Want to knock through and extend. Nearly moved but decided to improve instead.",
+     page:"WhatsApp (direct)", pageUrl:null, srcShort:"WhatsApp / direct", srcKind:"direct",
+     utm:{source:"direct",medium:"—",campaign:"—",content:"—",term:"—"},
+     stage:"Won", date:"20 Jun 2026", notes:"WON — contract signed. 14-week programme: rear extension + knock-through + utility/boot room."},
+    {id:"L-1026", name:"Laura Bennett", email:"laura.b@gmail.com", phone:"07700 900555", postcode:"M20 2RN",
+     projectType:"Kitchen extension", idealStart:"As soon as possible",
+     message:"Rear kitchen extension in Didsbury.",
+     page:"/extensions/ (Extensions hub)", pageUrl:WEB+"extensions/", srcShort:"Meta traffic ad", srcKind:"paid",
+     utm:{source:"facebook",medium:"paid-social",campaign:"kitchen-extensions-2026",content:"traffic-ad",term:"—"},
+     stage:"Lost", date:"2 Jul 2026", notes:"Lost — Didsbury is outside our core Stockport/Cheshire area; went with a local builder. Keep for remarketing."}
+  ];
+  var crmState = {stage:"all"};
+  function showCrm(){ switchView('crm'); }
+  function badge(st){ return '<span class="badge-stage '+STAGES[st]+'">'+st+'</span>'; }
+  function setCrmFilter(s){ crmState.stage=s; renderCrm(); }
+  function renderCrm(){
+    var counts={}; CRM.forEach(function(l){counts[l.stage]=(counts[l.stage]||0)+1;});
+    var fil='<span class="sfil '+(crmState.stage==="all"?"active":"")+'" onclick="setCrmFilter(\'all\')">All <span class="n">'+CRM.length+'</span></span>';
+    STAGE_ORDER.forEach(function(s){ if(counts[s]) fil+='<span class="sfil '+(crmState.stage===s?"active":"")+'" onclick="setCrmFilter(\''+s+'\')">'+s+' <span class="n">'+counts[s]+'</span></span>'; });
+    document.getElementById('stageFilter').innerHTML=fil;
+    var rows=CRM.filter(function(l){return crmState.stage==="all"||l.stage===crmState.stage;}).map(function(l){
+      return '<tr onclick="openCrmLead(\''+l.id+'\')"><td><div class="nm">'+esc(l.name)+'</div><div class="sub">'+esc(l.email)+'</div></td>'
+        +'<td>'+esc(l.projectType)+'</td><td><span class="src-pill '+l.srcKind+'">'+esc(l.srcShort)+'</span></td>'
+        +'<td>'+badge(l.stage)+'</td><td class="sub">'+esc(l.date)+'</td></tr>';
+    }).join('');
+    document.getElementById('crmList').innerHTML='<table class="lead-table"><thead><tr><th>Lead</th><th>Project</th><th>Source</th><th>Stage</th><th>Received</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+  function stageOptions(cur){ return STAGE_ORDER.map(function(s){return '<option'+(s===cur?' selected':'')+'>'+s+'</option>';}).join(''); }
+  function drow(k,v,cls){ return '<div class="drow"><span class="k">'+k+'</span><span class="v '+(cls||'')+'">'+v+'</span></div>'; }
+  function openCrmLead(id){
+    var l=CRM.find(function(x){return x.id===id;}); if(!l) return; var u=l.utm;
+    var pg = l.pageUrl ? '<a href="'+l.pageUrl+'" target="_blank" rel="noopener">'+esc(l.page)+'</a>' : esc(l.page);
+    var html='<div class="drawer__top"><button class="drawer__x" onclick="closeCrmLead()">&#10005;</button>'
+      +'<h2>'+esc(l.name)+'</h2><div class="who">'+esc(l.id)+' &middot; '+esc(l.postcode)+'</div>'
+      +'<div class="drawer__stage"><label>Stage</label><select onchange="setStage(\''+l.id+'\',this.value)">'+stageOptions(l.stage)+'</select></div></div>'
+      +'<div class="drawer__body">'
+      +'<div class="dsec"><h4>Contact</h4>'+drow('Email','<a href="mailto:'+esc(l.email)+'">'+esc(l.email)+'</a>')+drow('Phone','<a href="tel:'+esc(l.phone.replace(/\s/g,''))+'">'+esc(l.phone)+'</a>')+drow('Postcode',esc(l.postcode))+'</div>'
+      +'<div class="dsec"><h4>Project</h4>'+drow('Type',esc(l.projectType))+drow('Ideal start',esc(l.idealStart))+'<div style="margin-top:.5rem"><div class="dmsg">'+esc(l.message)+'</div></div></div>'
+      +'<div class="dsec"><h4>Attribution</h4>'+drow('Converted on',pg)+drow('utm_source',esc(u.source),'mono')+drow('utm_medium',esc(u.medium),'mono')+drow('utm_campaign',esc(u.campaign),'mono')+drow('utm_content',esc(u.content),'mono')+drow('utm_term',esc(u.term),'mono')+drow('Received',esc(l.date))+'</div>'
+      +'<div class="dsec"><h4>Notes</h4><textarea class="dnotes" onchange="saveNote(\''+l.id+'\',this.value)">'+esc(l.notes)+'</textarea><div class="dnote-save">Notes saved to this lead (preview &mdash; in-memory).</div></div>'
+      +'</div>';
+    document.getElementById('drawerContent').innerHTML=html;
+    document.getElementById('crmDrawer').classList.add('open');
+    document.getElementById('drawerOv').classList.add('open');
+  }
+  function closeCrmLead(){ document.getElementById('crmDrawer').classList.remove('open'); document.getElementById('drawerOv').classList.remove('open'); }
+  function setStage(id,val){ var l=CRM.find(function(x){return x.id===id;}); if(l){ l.stage=val; renderCrm(); } }
+  function saveNote(id,val){ var l=CRM.find(function(x){return x.id===id;}); if(l) l.notes=val; }
+
+  // ---------- Google Business Profile ----------
+  var GBP = {
+    rating:"4.9", reviewCount:47,
+    reviews:[
+      {author:"Sarah W.", when:"2 weeks ago", text:"David and the team built a large kitchen extension on our place in Cheadle Hulme and we honestly couldn't be happier. Communication was brilliant from day one, every question answered, and they kept us updated at each stage. The site was left spotless every evening, which mattered with two little ones in the house. Finished bang on schedule and the standard of finish is superb. A proper family firm who genuinely care.", ownerReply:"Thank you so much, Sarah. It was a pleasure working with you both, and the kitchen looked fantastic in the end. Enjoy all those family meals in the new space, and don't hesitate to call if you ever need us. David, Eagle Build"},
+      {author:"James P.", when:"1 month ago", text:"We used Eagle Build for our new build in Bramhall and the whole experience was first class. David guided us through the design-and-build process and made what felt daunting really straightforward. The team were tidy, respectful of neighbours, and the quality of the brickwork and joinery is outstanding. On budget and delivered when they said they would. Cannot recommend highly enough.", ownerReply:"James, thank you for the kind words. Your new home was a real showcase project for us and the whole team took great pride in it. Wishing you and the family many happy years there. David, Eagle Build"},
+      {author:"Emma R.", when:"1 month ago", text:"Fantastic loft conversion at our house in Heaton Moor. From the first visit David listened to exactly what we wanted and came back with sensible ideas we hadn't thought of. The lads on site were polite, punctual and cleaned up properly every day. We now have a gorgeous master suite with an en-suite and it has completely transformed the house. Quality workmanship throughout.", ownerReply:"Thanks so much, Emma. That loft turned out beautifully and the extra light up there really lifted the whole space. It was a joy to work with you. Enjoy the new suite. David, Eagle Build"},
+      {author:"Michael T.", when:"2 months ago", text:"Eagle Build carried out a full refurbishment of our period property in Wilmslow and the results are stunning. It's not a small job bringing an older house up to modern standard while keeping its character, but David and his team managed it beautifully. Honest pricing, no surprises, and any small snags sorted without fuss. True craftsmen who take pride in their work.", ownerReply:"Michael, thank you. Sympathetic refurbishments like yours are exactly the kind of work we love, balancing the old character with modern comfort. Really appreciate you taking the time to review us. David, Eagle Build"},
+      {author:"Laura B.", when:"3 months ago", text:"We had a double-storey extension done in Cheadle and it has doubled our living space. David was upfront about timescales and costs from the start and stuck to both. The team were friendly, hardworking and left everything immaculate. Neighbours have all commented on how well it blends with the original house. A genuinely professional, trustworthy builder.", ownerReply:"Thank you, Laura. Getting a two-storey extension to sit naturally with the existing house takes care, so I'm really pleased it's turned out just how you hoped. Enjoy all that extra room. David, Eagle Build"},
+      {author:"Daniel H.", when:"4 months ago", text:"Superb single-storey kitchen extension in Stockport. What stood out was the communication, David was always reachable on WhatsApp and nothing was ever too much trouble. The team turned up when they said, worked tidily and the attention to detail on the finish is excellent. Being FMB members gave us real peace of mind too. Would use them again in a heartbeat.", ownerReply:"Cheers, Daniel. We always try to stay easy to reach, so it's great to hear that came through. Thank you for trusting us with your home and for the lovely feedback. David, Eagle Build"}
+    ],
+    posts:[
+      {type:"Update", title:"Just completed: kitchen extension in Cheadle Hulme", body:"Another beautiful open-plan kitchen extension handed over this month. Bi-fold doors, underfloor heating and a flood of natural light. Get in touch to plan yours.", cta:"Learn more"},
+      {type:"Offer", title:"Free design consultation & no-obligation quote", body:"Thinking about an extension, loft or new build? Book a free, no-obligation design consultation with David. Honest advice and a clear, transparent quote. No pressure.", cta:"Book"},
+      {type:"Update", title:"Proud FMB members & Grafters award winners", body:"As a Federation of Master Builders member and a Grafters award winner, we hold ourselves to the highest standards on every job. Quality and craftsmanship you can trust.", cta:"Learn more"},
+      {type:"Event", title:"Planning a spring build? Start now", body:"Spring is our busiest season, so autumn is the ideal time to design and cost your project ready for a spring start. Beat the rush and book your consultation today.", cta:"Call now"}
+    ],
+    qa:[
+      {q:"Which areas do you cover?", a:"We're based in Cheadle Hulme and work right across Greater Manchester and Cheshire, including Cheadle, Stockport, Bramhall, Wilmslow and Heaton Moor. If you're nearby, just ask."},
+      {q:"Do you offer free quotes?", a:"Yes. We provide a free, no-obligation consultation and a clear written quote for every project. David will visit, discuss your ideas and give honest advice with no pressure."},
+      {q:"Are you FMB members and fully insured?", a:"Yes, we're proud members of the Federation of Master Builders and fully insured. It gives our clients real peace of mind that the work is carried out to recognised professional standards."},
+      {q:"How long does a kitchen extension take?", a:"It varies with size and spec, but a single-storey kitchen extension is often in the region of 10 to 16 weeks on site. We'll give you a realistic timescale with your quote."},
+      {q:"Do you handle the planning and design side?", a:"Absolutely. As a design-and-build firm we can manage the whole process, including drawings and planning applications, so you have a single trusted point of contact from start to finish."}
+    ],
+    products:[
+      {name:"New Builds", price:"Free quote", desc:"Bespoke new homes designed and built to the highest standard, tailored around how you want to live."},
+      {name:"Kitchen Extensions", price:"From £45,000", desc:"Light-filled open-plan kitchen extensions with bi-folds and quality finishes that transform how you use your home."},
+      {name:"Loft Conversions", price:"From £40,000", desc:"Turn unused loft space into a stunning bedroom, en-suite or home office without losing your garden."},
+      {name:"Storey Extensions", price:"From £50,000", desc:"Single and double-storey extensions that add real living space and blend seamlessly with your existing home."},
+      {name:"Design & Build", price:"Free quote", desc:"A single trusted team handling design, planning and construction from first sketch to finished project."},
+      {name:"Refurbishment", price:"Free quote", desc:"Full and partial refurbishments that modernise your home while respecting its original character."}
+    ]
+  };
+  function showGbp(){ switchView('gbp'); }
+  function renderGbp(){
+    var stripImgs=["hero-8611.avif","build7.avif","build10.avif","photo-2498.avif"];
+    var strip=stripImgs.map(function(f){return '<img src="assets/gbp/'+f+'" alt="Eagle Build project">';}).join('');
+    var acts=[["🧭","Directions"],["🔖","Save"],["🌐","Website"],["📞","Call"],["↗","Share"]].map(function(a){return '<div class="g-act"><span class="ic2">'+a[0]+'</span>'+a[1]+'</div>';}).join('');
+    var head='<div class="gcard gbp-head"><div class="gbp-head__main">'
+      +'<h3>Eagle Build</h3>'
+      +'<div class="g-rating"><b>'+GBP.rating+'</b><span class="g-stars">★★★★★</span><a>'+GBP.reviewCount+' Google reviews</a></div>'
+      +'<div class="g-cat">Building firm &middot; Cheadle Hulme, Stockport</div>'
+      +'<div class="g-actions">'+acts+'</div>'
+      +'<div class="g-info">'
+        +'<div class="row"><span class="gi">📍</span>15 Ladybridge Rd, Cheadle Hulme, Cheadle SK8 5BL</div>'
+        +'<div class="row"><span class="gi">🕒</span><span><span class="open">Open</span> &middot; Closes 5 pm</span></div>'
+        +'<div class="row"><span class="gi">📞</span><a>+44 7791 550833</a></div>'
+        +'<div class="row"><span class="gi">🌐</span><a>eaglebuild.co.uk</a></div>'
+        +'<div class="row"><span class="gi">✓</span>Family-run &middot; FMB member &middot; Design and build &middot; Free quotes</div>'
+      +'</div></div><div class="gbp-head__photos">'+strip+'</div></div>';
+    var pal=["#c5221f","#1a73e8","#188038","#e37400","#7c3aed","#0b8043"];
+    var revs=GBP.reviews.map(function(r,i){
+      return '<div class="g-rev"><div class="g-rev__top"><div class="g-av" style="background:'+pal[i%pal.length]+'">'+esc(r.author[0])+'</div>'
+        +'<div class="g-rev__who"><b>'+esc(r.author)+'</b><span>Local Guide &middot; '+esc(r.when)+'</span></div></div>'
+        +'<div class="g-rev__stars">★★★★★</div><div class="g-rev__text">'+esc(r.text)+'</div>'
+        +'<div class="g-reply"><b>Response from the owner</b><span>'+esc(r.when)+'</span><p>'+esc(r.ownerReply)+'</p></div></div>';
+    }).join('');
+    var revsec='<div class="g-sec"><div class="g-sec__h"><h4>Reviews</h4><span class="more">Write a review</span></div>'
+      +'<div class="g-revsum"><div class="big">'+GBP.rating+'<span class="s">★★★★★</span><span class="c">'+GBP.reviewCount+' reviews</span></div>'
+      +'<div class="bars">'+[5,4,3,2,1].map(function(n){var w=n===5?92:(n===4?7:1);return '<div class="g-bar"><span>'+n+'</span><span class="track"><span class="fill" style="width:'+w+'%"></span></span></div>';}).join('')+'</div></div>'
+      +revs+'</div>';
+    var postImgs=["build10.avif","hero-8611.avif","photo-8429.avif","build7.avif"];
+    var posts=GBP.posts.map(function(p,i){
+      return '<div class="g-post"><img src="assets/gbp/'+postImgs[i%postImgs.length]+'" alt="">'
+        +'<div class="g-post__b"><span class="g-post__type">'+esc(p.type)+'</span><b>'+esc(p.title)+'</b><p>'+esc(p.body)+'</p><span class="g-post__cta">'+esc(p.cta)+' &rarr;</span></div></div>';
+    }).join('');
+    var postsec='<div class="g-sec"><div class="g-sec__h"><h4>Updates</h4><span class="more">View all</span></div><div class="g-posts">'+posts+'</div></div>';
+    var prodImg={"New Builds":"hero-8611.avif","Kitchen Extensions":"build10.avif","Loft Conversions":"build5.avif","Storey Extensions":"build7.avif","Design & Build":"photo-8429.avif","Refurbishment":"photo-2498.avif"};
+    var prods=GBP.products.map(function(p){
+      return '<div class="g-prod"><img src="assets/gbp/'+(prodImg[p.name]||"build7.avif")+'" alt=""><div class="g-prod__b"><b>'+esc(p.name)+'</b><div class="price">'+esc(p.price)+'</div><p>'+esc(p.desc)+'</p></div></div>';
+    }).join('');
+    var prodsec='<div class="g-sec"><div class="g-sec__h"><h4>Products and services</h4><span class="more">View all</span></div><div class="g-prods">'+prods+'</div></div>';
+    var qas=GBP.qa.map(function(q){
+      return '<div class="g-qa"><div class="g-qa__q"><span class="qm">Q</span>'+esc(q.q)+'</div><div class="g-qa__a"><span class="badge-o">Owner</span><span>'+esc(q.a)+'</span></div></div>';
+    }).join('');
+    var qasec='<div class="g-sec"><div class="g-sec__h"><h4>Questions and answers</h4><span class="more">See all questions</span></div>'+qas+'</div>';
+    document.getElementById('gbpMock').innerHTML=head+revsec+postsec+prodsec+qasec;
+  }
+
+  // ---------- Trustpilot ----------
+  var TP = {
+    score:"4.8", reviewCount:34, label:"Excellent",
+    dist:[{s:5,p:88},{s:4,p:9},{s:3,p:2},{s:2,p:1},{s:1,p:0}],
+    reviews:[
+      {author:"Sarah W.", loc:"Cheadle Hulme, GB", nrev:2, rating:5, when:"18 Jun 2026", title:"A family firm who genuinely care", body:"Eagle Build built our kitchen extension and the experience was faultless from first visit to handover. Clear communication throughout, the site left spotless every evening, finished on schedule and the standard of finish is superb. Would not hesitate to recommend them.", doe:"June 2026", reply:"Thank you so much, Sarah. It was a pleasure working with you both, and the kitchen turned out beautifully. Enjoy the new space. David, Eagle Build"},
+      {author:"James P.", loc:"Bramhall, GB", nrev:1, rating:5, when:"29 May 2026", title:"First-class new build, on time and on budget", body:"David guided us through the whole design-and-build process for our new home and made something daunting feel straightforward. Tidy, respectful of neighbours and the quality of the brickwork and joinery is outstanding. Delivered exactly when they said they would.", doe:"May 2026", reply:"James, thank you for the kind words. Your new home was a showcase project for the whole team. Wishing you many happy years there. David, Eagle Build"},
+      {author:"Emma R.", loc:"Heaton Moor, GB", nrev:3, rating:5, when:"2 May 2026", title:"Loft conversion that transformed the house", body:"From the first visit David listened to exactly what we wanted and came back with ideas we had not thought of. The team were polite, punctual and cleaned up properly every day. We now have a gorgeous master suite with en-suite. Quality workmanship throughout.", doe:"April 2026", reply:"Thanks so much, Emma. That loft turned out beautifully and the extra light really lifted the space. Enjoy the new suite. David, Eagle Build"},
+      {author:"Michael T.", loc:"Wilmslow, GB", nrev:2, rating:5, when:"14 Apr 2026", title:"True craftsmen on a period refurbishment", body:"Eagle Build carried out a full refurbishment of our period property and the results are stunning. Bringing an older house up to modern standard while keeping its character is not a small job, but David and his team managed it beautifully. Honest pricing and no surprises.", doe:"March 2026", reply:"Michael, thank you. Sympathetic refurbishments are exactly the work we love. Really appreciate you taking the time to review us. David, Eagle Build"},
+      {author:"Laura B.", loc:"Cheadle, GB", nrev:1, rating:4, when:"27 Mar 2026", title:"Double-storey extension, professional throughout", body:"A two-storey extension that has doubled our living space and blends seamlessly with the original house. Upfront about timescales and costs and stuck to both. A minor snag near the end was sorted quickly and without fuss. A trustworthy, professional builder.", doe:"March 2026", reply:"Thank you, Laura. Getting a two-storey extension to sit naturally with the existing house takes care, so I am really pleased with the result. Enjoy the extra room. David, Eagle Build"}
+    ]
+  };
+  function tpStars(n, sm){ var s=''; for(var i=1;i<=5;i++){ s+='<span class="tpsq'+(sm?' sm':'')+(i>n?' off':'')+'">&#9733;</span>'; } return '<span class="tp-stars">'+s+'</span>'; }
+  function renderTp(){
+    var pal=["#1a73e8","#c5221f","#188038","#e37400","#7c3aed"];
+    var head='<div class="tp-head"><h3>Eagle Build</h3>'
+      +'<a class="tp-domain" href="https://www.trustpilot.com/review/eaglebuild.co.uk" target="_blank" rel="noopener">eaglebuild.co.uk</a>'
+      +'<div class="tp-score">'+tpStars(5)+'<span class="tp-trustscore">TrustScore <b>'+TP.score+'</b></span></div>'
+      +'<div class="tp-meta"><b>'+TP.label+'</b> &middot; based on <b>'+TP.reviewCount+'</b> reviews</div>'
+      +'<div class="tp-verified">&#10003; Verified company profile</div></div>';
+    var dist=TP.dist.map(function(d){return '<div class="tp-drow"><span class="lab">'+d.s+'-star</span><span class="track"><span class="fill" style="width:'+d.p+'%"></span></span><span class="pct">'+d.p+'%</span></div>';}).join('');
+    var distsec='<div class="tp-sec"><div class="tp-sec__h">Rating distribution</div><div class="tp-dist">'+dist+'</div></div>';
+    var revs=TP.reviews.map(function(r,i){
+      return '<div class="tp-rev"><div class="tp-rev__top"><div class="tp-av" style="background:'+pal[i%pal.length]+'">'+esc(r.author[0])+'</div>'
+        +'<div class="tp-rev__who"><b>'+esc(r.author)+'</b><span>'+esc(String(r.nrev))+(r.nrev===1?' review':' reviews')+' &middot; '+esc(r.loc)+'</span></div>'
+        +'<span class="tp-rev__meta">'+esc(r.when)+'</span></div>'
+        +tpStars(r.rating,true)
+        +'<b class="tp-rev__title">'+esc(r.title)+'</b>'
+        +'<p class="tp-rev__body">'+esc(r.body)+'</p>'
+        +'<span class="tp-doe">Date of experience: '+esc(r.doe)+'</span>'
+        +(r.reply?'<div class="tp-reply"><b>Reply from Eagle Build</b><span>'+esc(r.when)+'</span><p>'+esc(r.reply)+'</p></div>':'')
+        +'</div>';
+    }).join('');
+    var revsec='<div class="tp-sec"><div class="tp-sec__h">Recent reviews</div>'+revs+'</div>';
+    document.getElementById('tpMock').innerHTML=head+distsec+revsec;
+  }
+
+  // ---------- Who we are: client wall ----------
+  var CLIENTS = [
+    {name:"Belgrade Waterfront", logo:"belgrade-waterfront.svg", desc:"The largest waterfront real estate development project in South East Europe.", did:"SEO, website development, social media management, digital advertising, and photo and video production."},
+    {name:"The Clorox Company", logo:"clorox.svg", desc:"A Fortune 500 consumer goods multinational behind household brands including Clorox, Glad, Brita, Pine-Sol, and Burt's Bees.", did:"A full-scale market test of a new product category. We built a complete ecommerce website and ran social and Google Ads campaigns, driving 10,000 purchases in three months."},
+    {name:"Citibank", logo:"citi.png", desc:"The global consumer bank of Citigroup, one of the world's largest financial institutions, operating across nearly 90 markets.", did:"Rapid demand-testing to validate new products and offerings across North and South American markets: fast-turnaround websites and campaigns for each short cycle, generating thousands of leads."},
+    {name:"Speechify", desc:"", did:""},
+    {name:"Semrush", desc:"", did:""},
+    {name:"Miss Universe", desc:"", did:""},
+    {name:"Match", desc:"", did:""},
+    {name:"Tomorrow Conference", desc:"", did:""},
+    {name:"MVP Workshop", desc:"", did:""},
+    {name:"Inery", desc:"", did:""}
+  ];
+  function renderWho(){
+    var html=CLIENTS.map(function(c){
+      var mark = c.logo ? '<img class="ctile__img" src="assets/clients/'+c.logo+'" alt="'+esc(c.name)+'">' : '<div class="ctile__logo">'+esc(c.name)+'</div>';
+      var body;
+      if(c.desc || c.did){
+        body = (c.desc ? '<div class="ctile__desc">'+esc(c.desc)+'</div>' : '')
+             + (c.did ? '<div class="ctile__scope"><span class="ctile__lbl">What we did</span>'+esc(c.did)+'</div>' : '');
+      } else {
+        body = '<div class="ctile__did pending">Engagement to be confirmed</div>';
+      }
+      return '<div class="ctile"><div class="ctile__mark">'+mark+'</div>'+body+'</div>';
+    }).join('');
+    document.getElementById('whoWall').innerHTML=html;
+  }
+  function carEl(){ return document.querySelector('#view-ads .carousel'); }
+  function carStep(){ var car=carEl(); var cc=car.querySelector('.cc'); return cc.getBoundingClientRect().width + 8; }
+  function carScroll(dir){ carEl().scrollBy({left:dir*carStep(), behavior:'smooth'}); }
+  function updateArrows(){ var car=carEl(); if(!car) return;
+    var p=document.querySelector('.car-arrow.prev'), n=document.querySelector('.car-arrow.next');
+    if(p) p.toggleAttribute('disabled', car.scrollLeft<=18);
+    if(n) n.toggleAttribute('disabled', car.scrollLeft>=car.scrollWidth-car.clientWidth-18); }
+  function ccClick(cc){ var car=cc.parentElement; var cr=car.getBoundingClientRect(), r=cc.getBoundingClientRect();
+    if(r.right>cr.right+2 || r.left<cr.left-2){ car.scrollBy({left:r.left-cr.left, behavior:'smooth'}); } }
+  function initCarousel(){ var car=carEl(); if(!car) return; var img=car.querySelector('.cc img');
+    var place=function(){ var h=img.getBoundingClientRect().height; if(h>10){ document.querySelectorAll('#view-ads .car-arrow').forEach(function(a){a.style.top=(h/2)+'px'}); } updateArrows(); };
+    place(); setTimeout(place,90); if(img){ img.addEventListener('load', place); }
+    if(!car._wired){ car.addEventListener('scroll', updateArrows); window.addEventListener('resize', place); car._wired=true; } }
+  function openSitePane(){ document.getElementById('sitePane').classList.add('open'); document.getElementById('sitePaneOverlay').classList.add('open'); }
+  function closeSitePane(){ var p=document.getElementById('sitePane'); if(p){ p.classList.remove('open'); document.getElementById('sitePaneOverlay').classList.remove('open'); } }
+  function openLead(){ document.getElementById('leadOverlay').classList.add('open'); }
+  function closeLead(){ document.getElementById('leadOverlay').classList.remove('open'); }
+  function submitLead(e){
+    e.preventDefault();
+    document.getElementById('leadBody').innerHTML =
+      '<div class="done"><div class="tick">&#10003;</div><h3 style="text-align:center;color:var(--charcoal)">Thanks &mdash; your enquiry is in.</h3>'
+      + '<p style="text-align:center;color:var(--ink-muted);font-size:.85rem;margin-top:.4rem">Eagle Build will be in touch within one business day.</p>'
+      + '<div class="crm-flag"><strong>&#9670; This is a preview.</strong> On a live campaign, this lead is captured natively inside Meta and flows straight into the <strong>CRM</strong> &mdash; the connection shown in the Content Cluster.</div></div>';
+  }
+  function switchView(v){
+    document.querySelectorAll('.hub-item[data-view]').forEach(function(x){x.classList.toggle('active', x.getAttribute('data-view')===v)});
+    document.getElementById('view-recs').hidden = (v!=='recs');
+    document.getElementById('view-who').hidden = (v!=='who');
+    document.getElementById('view-people').hidden = (v!=='people');
+    document.getElementById('view-website').hidden = (v!=='website');
+    document.getElementById('view-cluster').hidden = (v!=='cluster');
+    document.getElementById('view-social').hidden = (v!=='social');
+    document.getElementById('view-ads').hidden = (v!=='ads');
+    document.getElementById('view-gbp').hidden = (v!=='gbp');
+    document.getElementById('view-tp').hidden = (v!=='tp');
+    document.getElementById('view-crm').hidden = (v!=='crm');
+    if(v==='crm') renderCrm();
+    if(v==='gbp') renderGbp();
+    if(v==='tp') renderTp();
+    if(v==='who') renderWho();
+    document.getElementById('tbTitle').textContent = VIEWS[v].title;
+    document.getElementById('tbSub').textContent = VIEWS[v].sub;
+    var o=document.getElementById('tbOpen'); o.href=VIEWS[v].open; o.textContent=VIEWS[v].openLabel;
+    document.getElementById('tbBadge').hidden = (v!=='website');
+    document.getElementById('tbInfo').hidden = (v!=='website');
+    if(v!=='website') closeSitePane();
+    if(v==='ads') setTimeout(initCarousel, 40);
+  }
+  document.querySelectorAll('.hub-item[data-view]').forEach(function(it){
+    it.addEventListener('click', function(){
+      var v=it.getAttribute('data-view');
+      if(v==='social' && !state.article){ /* keep current article filter if set */ }
+      switchView(v);
+      if(v==='social') renderSocial();
+    });
+  });
+  renderSocial();
+</script>
+</body>
+</html>
