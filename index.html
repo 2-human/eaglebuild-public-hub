@@ -374,6 +374,11 @@
   .brief__body p{font-size:.98rem;line-height:1.65;color:var(--ink-muted);margin-bottom:.85rem;max-width:730px}
   .brief__body p b{color:var(--ink);font-weight:700}
   .brief__aside{border-left:2px solid var(--copper);padding-left:1rem;color:var(--ink)!important;font-weight:500}
+  .brief__quote{margin:1.9rem 0;padding:1.3rem 1.6rem;background:#fff;border:1px solid var(--hairline);border-left:3px solid var(--copper);border-radius:10px;font-family:var(--font-display);font-size:1.45rem;line-height:1.32;color:var(--ink);max-width:770px}
+  .brief__quote cite{display:block;margin-top:.75rem;font-family:var(--font-body);font-size:.78rem;font-style:normal;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--copper)}
+  .brief__body ul{margin:.4rem 0 1rem;padding-left:1.15rem;max-width:730px}
+  .brief__body li{font-size:.98rem;line-height:1.55;color:var(--ink-muted);margin-bottom:.4rem}
+  .brief__body li::marker{color:var(--copper)}
   .state{margin-top:1.3rem;border-top:1px solid var(--hairline)}
   .state__row{display:grid;grid-template-columns:210px 1fr;gap:1.3rem;padding:.85rem 0;border-bottom:1px solid var(--hairline)}
   .state__k{font-weight:700;color:var(--ink);font-size:.9rem}
@@ -452,6 +457,9 @@
   <div class="hub-proposal">Proposal for <b>Eagle Build</b></div>
   <nav class="hub-nav">
     <p class="hub-section">Project</p>
+    <a class="hub-item" data-view="intro">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 7v13"/><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H12v14H6a2 2 0 0 0-2 1.2z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H12v14h6a2 2 0 0 1 2 1.2z"/></svg>
+      Intro</a>
     <a class="hub-item" data-view="recs">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h5M10 17h5"/></svg>
       Recommendations</a>
@@ -500,6 +508,28 @@
     <a class="tb-open" id="tbOpen" href="website/" target="_blank" rel="noopener">Open in new tab &#8599;</a>
     <button class="tb-btn" id="tbInfo" onclick="openSitePane()" hidden>How this improves the current site</button>
   </div>
+
+  <section class="view" id="view-intro" hidden>
+    <div class="brief">
+      <p class="brief__eyebrow">North Star Communications &middot; Proposal for Eagle Build</p>
+      <h1>Introduction</h1>
+      <p class="brief__lede">This proposal did not start with us. It started with you. A few days ago you posted, publicly, that you were looking for a new marketing agency. It struck a nerve: close to two hundred reactions, more than three hundred comments, and a queue of agencies lining up to pitch. This is our answer.</p>
+      <blockquote class="brief__quote">&ldquo;The last lot took &pound;13k off me for SEO and delivered zero leads. Not a few bad ones. Zero.&rdquo;<cite>David Eagle, Eagle Build</cite></blockquote>
+      <div class="brief__body">
+        <p>You set out a simple bar, and it is the right one:</p>
+        <ul>
+          <li>Proven results in construction.</li>
+          <li>Targets written into the contract: leads and enquiries, not impressions.</li>
+          <li>Accountability when those targets are missed.</li>
+        </ul>
+        <p>You also named the thing every builder understands and most agencies dodge. In construction, you price the work and you deliver what was priced for. You cannot hand a client a missing roof and a plan to try again next year for another ten grand. Marketing should answer to the same standard.</p>
+        <p><b>So this is not a graph-heavy pitch that goes vague the moment targets come up.</b> Everything in this hub is one connected system pointed at a single outcome: more of the right enquiries, turned into signed work, with the numbers visible the whole way.</p>
+        <p>Start with <b>Recommendations</b> for what we would build and why. <b>Who We Are</b> and <b>Key People</b> show exactly who you would be working with. The rest is the work already taking shape: the website, the content, the organic and paid social, the review engines, and a CRM that traces every lead back to what produced it.</p>
+        <p class="brief__aside">You asked for an agency that treats your marketing the way you treat a build. That is the whole idea behind what follows.</p>
+      </div>
+      <div class="brief__foot"><div class="brief__star" aria-hidden="true"></div><p>North Star Communications. Prepared for Eagle Build.</p></div>
+    </div>
+  </section>
 
   <section class="view" id="view-recs" hidden>
     <div class="brief">
@@ -1047,6 +1077,7 @@ Full case study — link in bio. 👆`, tags:["#kitchenextension","#cheadle","#i
   function showSocial(slug){ state.article=slug; switchView('social'); renderSocial(); }
 
   var VIEWS = {
+    intro:{title:"Intro", sub:"Answering your public callout for a new agency", open:WEB, openLabel:"Open the website ↗"},
     recs:{title:"Recommendations", sub:"Why we would build this, and how it improves on today", open:WEB, openLabel:"Open the website ↗"},
     who:{title:"Who We Are", sub:"North Star Communications · approach, services, and work", open:WEB, openLabel:"Open the website ↗"},
     people:{title:"Key People", sub:"The people who would run the work", open:WEB, openLabel:"Open the website ↗"},
@@ -1314,6 +1345,7 @@ Full case study — link in bio. 👆`, tags:["#kitchenextension","#cheadle","#i
   }
   function switchView(v){
     document.querySelectorAll('.hub-item[data-view]').forEach(function(x){x.classList.toggle('active', x.getAttribute('data-view')===v)});
+    document.getElementById('view-intro').hidden = (v!=='intro');
     document.getElementById('view-recs').hidden = (v!=='recs');
     document.getElementById('view-who').hidden = (v!=='who');
     document.getElementById('view-people').hidden = (v!=='people');
