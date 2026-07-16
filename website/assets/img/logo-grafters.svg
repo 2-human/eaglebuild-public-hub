@@ -1,0 +1,7 @@
+<svg viewBox="0 0 22 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafters Award Winner">
+  <path d="M7.4 14.6l-2.7 8.9 3.5-2.3 2.5 2.2z" fill="#c07d38"/>
+  <path d="M14.6 14.6l2.7 8.9-3.5-2.3-2.5 2.2z" fill="#d7934d"/>
+  <circle cx="11" cy="9.4" r="8.6" fill="#d7934d"/>
+  <circle cx="11" cy="9.4" r="8.6" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1"/>
+  <path d="M11 3.9l1.62 3.28 3.62.53-2.62 2.55.62 3.61L11 12.16l-3.24 1.7.62-3.61L5.76 7.7l3.62-.53z" fill="#fff"/>
+</svg>

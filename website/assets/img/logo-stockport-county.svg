@@ -1,0 +1,6 @@
+<svg viewBox="0 0 21 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stockport County FC">
+  <path d="M10.5 1l9 2.4v7.2c0 5.9-4 9.8-9 11.9-5-2.1-9-6-9-11.9V3.4z" fill="#14539a"/>
+  <path d="M10.5 1l9 2.4v7.2c0 5.9-4 9.8-9 11.9-5-2.1-9-6-9-11.9V3.4z" fill="none" stroke="#fff" stroke-width="1"/>
+  <circle cx="10.5" cy="10" r="4.3" fill="#fff"/>
+  <path d="M10.5 6.9l1.55 1.13-.59 1.82h-1.92L8.95 8.03z" fill="#14539a"/>
+</svg>

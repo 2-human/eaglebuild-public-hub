@@ -1,0 +1,9 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Google">
+  <g fill="none" stroke-width="4.4">
+    <circle cx="12" cy="12" r="7.6" stroke="#fbbc05" stroke-dasharray="11.9 35.9" stroke-dashoffset="-11.9" transform="rotate(-58 12 12)"/>
+    <circle cx="12" cy="12" r="7.6" stroke="#ea4335" stroke-dasharray="11.9 35.9" stroke-dashoffset="0" transform="rotate(-58 12 12)"/>
+    <circle cx="12" cy="12" r="7.6" stroke="#34a853" stroke-dasharray="11.9 35.9" stroke-dashoffset="-23.8" transform="rotate(-58 12 12)"/>
+    <circle cx="12" cy="12" r="7.6" stroke="#4285f4" stroke-dasharray="9.5 38.3" stroke-dashoffset="-35.7" transform="rotate(-58 12 12)"/>
+  </g>
+  <rect x="11.4" y="9.8" width="6.2" height="4.4" fill="#4285f4"/>
+</svg>
