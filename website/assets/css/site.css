@@ -106,6 +106,19 @@ h1, h2, h3 { color: var(--charcoal); }
 @media (max-width: 560px) {
   .nav__actions .btn--ghost { display: none; }
 }
+/* mobile nav (hamburger, CSS-only) */
+.nav__check { display: none; }
+.nav__burger { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 38px; height: 34px; padding: 6px; cursor: pointer; margin-left: .15rem; }
+.nav__burger span { display: block; height: 2px; width: 100%; background: var(--charcoal); border-radius: 2px; transition: transform .2s var(--ease), opacity .2s var(--ease); }
+.mobile-menu { display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 70; background: #fff; border-bottom: 1px solid var(--hairline); box-shadow: 0 26px 44px -22px rgba(19,19,23,.35); flex-direction: column; padding: .3rem 1.5rem 1rem; }
+.mobile-menu a { padding: .8rem .2rem; color: var(--charcoal); font-weight: 600; font-size: 1.02rem; border-bottom: 1px solid var(--hairline); }
+.mobile-menu a:last-child { border-bottom: 0; }
+.mobile-menu a:hover { color: var(--copper-dark); }
+.nav__check:checked ~ .mobile-menu { display: flex; }
+.nav__check:checked ~ .wrapper .nav__burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav__check:checked ~ .wrapper .nav__burger span:nth-child(2) { opacity: 0; }
+.nav__check:checked ~ .wrapper .nav__burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+@media (max-width: 900px) { .nav__burger { display: flex; } }
 
 /* ---------- Hero ---------- */
 .hero { background: var(--bg-alt); border-bottom: 1px solid var(--hairline); overflow: hidden; }

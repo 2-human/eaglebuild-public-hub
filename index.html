@@ -449,6 +449,42 @@
   .node--ad:hover{box-shadow:0 12px 26px -16px rgba(24,119,242,.5)}
   .node--ad .node__tag{color:var(--fb)}
   .wire--ad{fill:none;stroke:var(--fb);stroke-width:2;stroke-dasharray:2 5;stroke-linecap:round}
+  /* ---------- responsive ---------- */
+  .tb-menu{display:none;background:none;border:0;font-size:1.4rem;line-height:1;color:var(--charcoal);cursor:pointer;padding:.1rem .35rem;margin-left:-.2rem}
+  .nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:125}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  @media (max-width:900px){
+    body{grid-template-columns:1fr}
+    .sidebar{position:fixed;top:0;left:0;bottom:0;width:min(282px,84vw);z-index:130;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+    body.nav-open .sidebar{transform:translateX(0);box-shadow:0 0 60px -8px rgba(0,0,0,.6)}
+    .nav-overlay{display:block}
+    body.nav-open .nav-overlay{opacity:1;pointer-events:auto}
+    .tb-menu{display:inline-flex;align-items:center}
+    .toolbar{padding:.6rem .9rem;gap:.55rem}
+    .tb-sub{display:none}
+    .tb-badge{margin-left:0}
+    .tb-open{margin-left:auto;font-size:.76rem;padding:.4rem .6rem;white-space:nowrap}
+    .tb-btn{display:none}
+    .cluster,.social,.ads,.crm,.gbp{padding:1.4rem 1.05rem 2.5rem}
+    .brief{padding:1.4rem 1.1rem 2.6rem}
+    .brief h1,.cluster h1,.social h1,.ads h1,.crm h1,.gbp h1{font-size:2rem}
+    .brief__lede{font-size:1.05rem}
+    .diagram{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:1rem}
+    .diagram svg{min-width:680px}
+    .fb{max-width:100%}
+    .lead-table{min-width:600px}
+    .g-revsum{flex-wrap:wrap;gap:.8rem}
+    .gbp-head{gap:1rem}
+    .sitepane{width:min(420px,92vw)}
+  }
+  @media (max-width:560px){
+    .tb-badge{display:none}
+    .cwall{grid-template-columns:1fr}
+    .brief h1,.cluster h1,.social h1,.ads h1,.crm h1,.gbp h1{font-size:1.7rem}
+    .brief__lede{font-size:1rem}
+    .brief__quote{font-size:1.2rem;padding:1rem 1.15rem}
+    .stage-filter{flex-wrap:wrap}
+  }
 </style>
 </head>
 <body>
@@ -501,8 +537,10 @@
   <div class="sidebar__foot">North Star Communications.<br>A proposal for Eagle Build. Surfaces are review candidates, not the live site.</div>
 </aside>
 
+<div class="nav-overlay" id="navOverlay" onclick="closeNav()"></div>
 <main class="main">
   <div class="toolbar">
+    <button class="tb-menu" id="tbMenu" onclick="toggleNav()" aria-label="Open menu">&#9776;</button>
     <span class="tb-title" id="tbTitle">Website</span>
     <span class="tb-badge" id="tbBadge" hidden>Functional prototype</span>
     <span class="tb-sub" id="tbSub">Full-site review candidate</span>
@@ -1153,7 +1191,7 @@ Full case study — link in bio. 👆`, tags:["#kitchenextension","#cheadle","#i
         +'<td>'+esc(l.projectType)+'</td><td><span class="src-pill '+l.srcKind+'">'+esc(l.srcShort)+'</span></td>'
         +'<td>'+badge(l.stage)+'</td><td class="sub">'+esc(l.date)+'</td></tr>';
     }).join('');
-    document.getElementById('crmList').innerHTML='<table class="lead-table"><thead><tr><th>Lead</th><th>Project</th><th>Source</th><th>Stage</th><th>Received</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    document.getElementById('crmList').innerHTML='<div class="table-scroll"><table class="lead-table"><thead><tr><th>Lead</th><th>Project</th><th>Source</th><th>Stage</th><th>Received</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   }
   function stageOptions(cur){ return STAGE_ORDER.map(function(s){return '<option'+(s===cur?' selected':'')+'>'+s+'</option>';}).join(''); }
   function drow(k,v,cls){ return '<div class="drow"><span class="k">'+k+'</span><span class="v '+(cls||'')+'">'+v+'</span></div>'; }
@@ -1332,6 +1370,8 @@ Full case study — link in bio. 👆`, tags:["#kitchenextension","#cheadle","#i
     var place=function(){ var h=img.getBoundingClientRect().height; if(h>10){ document.querySelectorAll('#view-ads .car-arrow').forEach(function(a){a.style.top=(h/2)+'px'}); } updateArrows(); };
     place(); setTimeout(place,90); if(img){ img.addEventListener('load', place); }
     if(!car._wired){ car.addEventListener('scroll', updateArrows); window.addEventListener('resize', place); car._wired=true; } }
+  function toggleNav(){ document.body.classList.toggle('nav-open'); }
+  function closeNav(){ document.body.classList.remove('nav-open'); }
   function openSitePane(){ document.getElementById('sitePane').classList.add('open'); document.getElementById('sitePaneOverlay').classList.add('open'); }
   function closeSitePane(){ var p=document.getElementById('sitePane'); if(p){ p.classList.remove('open'); document.getElementById('sitePaneOverlay').classList.remove('open'); } }
   function openLead(){ document.getElementById('leadOverlay').classList.add('open'); }
@@ -1374,6 +1414,7 @@ Full case study — link in bio. 👆`, tags:["#kitchenextension","#cheadle","#i
       if(v==='social' && !state.article){ /* keep current article filter if set */ }
       switchView(v);
       if(v==='social') renderSocial();
+      closeNav();
     });
   });
   renderSocial();
